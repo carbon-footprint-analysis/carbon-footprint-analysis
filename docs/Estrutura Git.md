@@ -1,10 +1,19 @@
 ﻿carbon-footprint-analysis/
 │
-├── docs/          # documentação conceitual do projeto (planejamento, arquitetura e decisões)
-│   ├── press_release.md     # descrição do projeto como produto (problema, solução e impacto esperado)
-│   ├── faq.md               # perguntas críticas sobre o projeto (decisão suportada, dados, riscos)
-│   ├── crisp_framework.md   # planejamento estruturado do projeto seguindo CRISP-DM
-│   └── architecture.md      # arquitetura técnica do sistema (pipeline de dados, fluxo de inferência e deploy) 
+├── docs/                         # documentação conceitual e técnica do projeto
+
+│   ├── press\_release.md          # visão do projeto como produto (problema, solução e impacto)
+
+│   ├── faq.md                    # perguntas críticas (decisões, riscos, limitações)
+
+│   ├── crisp\_framework.md        # planejamento seguindo CRISP-DM
+
+│   ├── architecture.md           # arquitetura do sistema (pipeline, fluxo, componentes)
+
+│   ├── dataset\_schema.md         # definição estrutural do dataset (colunas, unidades, regras)
+
+│   └── data\_generation\_methodology.md  # metodologia de geração dos dados (simulação, lógica, variabilidade)
+
 │
 ├── data/          # datasets utilizados no projeto
 │   ├── raw/       # dados originais sem modificação (fonte de verdade)
@@ -24,8 +33,8 @@
 │
 │   ├── features/  # criação de variáveis usadas pelo modelo (feature engineering)
 │   │   ├── init.py
-│   │   ├── build_features.py        # pipeline principal de criação de features
-│   │   └── aggregation_features.py  # features derivadas de agregações ou transformações
+│   │   ├── build\_features.py        # pipeline principal de criação de features
+│   │   └── aggregation\_features.py  # features derivadas de agregações ou transformações
 │
 │   ├── models/    # lógica de modelos de machine learning
 │   │   ├── init.py
@@ -34,7 +43,7 @@
 │
 │   └── pipeline/  # definição dos pipelines oficiais do projeto
 │       ├── init.py
-│       └── training_pipeline.py  # pipeline completo de treinamento (data → features → modelo)
+│       └── training\_pipeline.py  # pipeline completo de treinamento (data → features → modelo)
 │
 ├── wrapper/       # camada de aplicação que conecta o modelo ao servidor/API
 │   ├── init.py
@@ -77,8 +86,9 @@
 │
 ├── README.md        # documentação principal do projeto (visão geral, arquitetura e instruções de uso)
 │
-├── PROJECT_GUIDE.md   # guia rápido explicando como o sistema funciona (dados → modelo → API)
+├── PROJECT\_GUIDE.md   # guia rápido explicando como o sistema funciona (dados → modelo → API)
 │
 ├── CONTRIBUTING.md    # regras para colaboração (branches, commits, estrutura de código)
 │
 └── .gitignore       # lista de arquivos e pastas ignoradas pelo Git
+
