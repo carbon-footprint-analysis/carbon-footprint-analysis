@@ -1,94 +1,190 @@
 ﻿carbon-footprint-analysis/
-│
-├── docs/                         # documentação conceitual e técnica do projeto
-
-│   ├── press\_release.md          # visão do projeto como produto (problema, solução e impacto)
-
-│   ├── faq.md                    # perguntas críticas (decisões, riscos, limitações)
-
-│   ├── crisp\_framework.md        # planejamento seguindo CRISP-DM
-
-│   ├── architecture.md           # arquitetura do sistema (pipeline, fluxo, componentes)
-
-│   ├── dataset\_schema.md         # definição estrutural do dataset (colunas, unidades, regras)
-
-│   └── data\_generation\_methodology.md  # metodologia de geração dos dados (simulação, lógica, variabilidade)
 
 │
-├── data/          # datasets utilizados no projeto
-│   ├── raw/       # dados originais sem modificação (fonte de verdade)
-│   ├── processed/ # dados limpos e transformados prontos para modelagem (cache para evitar reprocessamento)
-│   └── external/  # dados externos (APIs, datasets públicos, integrações com terceiros)
+
+├── docs/                         # documentação conceitual e estratégica do projeto (leitura obrigatória antes de codar)
+
+│   ├── press\_release.md          # visão do projeto como produto (problema, solução, impacto e proposta de valor)
+
+│   ├── faq.md                    # perguntas críticas (decisões técnicas, riscos, limitações e trade-offs)
+
+│   ├── crisp\_framework.md        # planejamento seguindo CRISP-DM (entendimento do problema até deploy)
+
+│   ├── architecture.md           # arquitetura do sistema (fluxo de dados, componentes e integração)
+
+│   ├── dataset\_schema.md         # definição das colunas e estrutura do dataset final (contrato de dados)
+
+│   └── data\_generation\_methodology.md  # lógica de geração dos dados sintéticos (regras, variabilidade e realismo)
+
 │
-├── notebooks/     # notebooks usados para exploração de dados, EDA e experimentação
-│                  # notebooks devem apenas orquestrar o pipeline, não conter lógica de produção
-│
-├── src/           # código principal reutilizável do projeto de Data Science
-│   ├── init.py
-│
-│   ├── data/      # preparação de dados (ingestão e limpeza)
-│   │   ├── init.py
-│   │   ├── ingest.py        # funções para carregar dados de arquivos, APIs ou banco de dados
-│   │   └── clean.py         # limpeza de dados, tratamento de nulos, normalização etc.
-│
-│   ├── features/  # criação de variáveis usadas pelo modelo (feature engineering)
-│   │   ├── init.py
-│   │   ├── build\_features.py        # pipeline principal de criação de features
-│   │   └── aggregation\_features.py  # features derivadas de agregações ou transformações
-│
-│   ├── models/    # lógica de modelos de machine learning
-│   │   ├── init.py
-│   │   ├── train.py    # treinamento do modelo
-│   │   └── predict.py  # função de previsão usando modelo treinado
-│
-│   └── pipeline/  # definição dos pipelines oficiais do projeto
-│       ├── init.py
-│       └── training\_pipeline.py  # pipeline completo de treinamento (data → features → modelo)
-│
-├── wrapper/       # camada de aplicação que conecta o modelo ao servidor/API
-│   ├── init.py
-│   ├── app.py     # inicialização da aplicação FastAPI
-│   ├── routes.py  # definição das rotas/endpoints da API
-│   ├── inference.py # carregamento do modelo treinado e execução de previsões
-│   └── settings.py  # configurações da aplicação (paths, parâmetros, variáveis de ambiente)
-│
-├── frontend/      # interface web da aplicação
-│   ├── static/    # arquivos estáticos servidos pelo servidor web
-│   │   ├── css/   # folhas de estilo da interface
-│   │   │   └── style.css
-│   │   ├── js/    # scripts de interação da interface
-│   │   │   └── app.js
-│   │   └── images/ # imagens usadas pela interface
+
+├── data/                         # camada de dados do projeto (organizada por estágio do dado)
+
+│   ├── raw/                      # dados originais (NUNCA modificar — fonte de verdade)
+
+│   │   ├── aneel\_generation.csv  # dados reais de geração de energia (base para matriz energética)
+
+│   │   ├── epe\_consumption.csv   # dados reais de consumo energético por setor/região
+
+│   │   └── ...                   # outros datasets brutos utilizados como referência
+
 │   │
-│   └── templates/ # templates HTML renderizados pelo backend (ex: Jinja2)
-│       └── index.html
+
+│   ├── external/                 # tabelas auxiliares usadas para gerar o dataset sintético (regras do sistema)
+
+│   │   ├── consumption\_profiles.csv       # faixas de consumo por tipo de uso (base para geração de valores)
+
+│   │   ├── efficiency\_profiles.csv        # variação de eficiência por uso (introduz realismo e variabilidade)
+
+│   │   ├── fuel\_parameters.csv            # fatores físicos (energia e emissão por combustível)
+
+│   │   ├── fuel\_distribution.csv          # probabilidade de uso de combustíveis por contexto
+
+│   │   ├── usage\_distribution.csv         # distribuição global dos tipos de uso (define proporção do dataset)
+
+│   │   ├── company\_profiles.csv           # perfis de empresas (impacto no consumo)
+
+│   │   ├── company\_size\_distribution.csv  # distribuição de tamanho das empresas (small, medium, large)
+
+│   │   └── energy\_source\_distribution.csv # distribuição das fontes elétricas (hidro, solar, etc.)
+
+│   │
+
+│   └── processed/                # dados finais prontos para análise e modelagem
+
+│       └── synthetic\_energy\_dataset.csv  # dataset sintético gerado pelo pipeline (principal output do projeto)
+
 │
-├── models/        # artefatos de modelos treinados
-│   ├── artifacts/ # arquivos serializados do modelo (.pkl, .joblib etc.)
-│   └── metadata.json # metadados do modelo (features usadas, data de treino, versão do modelo)
+
+├── notebooks/                   # notebooks para exploração (EDA) e testes (não usar para lógica final)
+
+│                               # servem para análise, validação e visualização dos dados
+
 │
-├── scripts/       # scripts executáveis para automação de tarefas
-│                  # ex: preprocessamento de dados, treinamento batch, atualização de dataset
+
+├── src/                         # código principal reutilizável do projeto (lógica de produção)
+
+│   ├── \_\_init\_\_.py              # inicializa o pacote Python do projeto
+
 │
-├── deploy/        # configuração de deploy e infraestrutura
-│                  # ex: nginx.conf, serviço uvicorn/systemd, scripts de inicialização
+
+│   ├── data/                    # ingestão e tratamento de dados
+
+│   │   ├── \_\_init\_\_.py
+
+│   │   ├── ingest.py            # leitura padronizada dos CSVs (raw e external)
+
+│   │   └── clean.py             # limpeza e padronização dos dados
+
 │
-├── reports/       # relatórios finais do projeto (análises, gráficos e conclusões)
-│                  # normalmente gerados a partir de notebooks ou scripts
+
+│   ├── features/                # criação de variáveis (feature engineering)
+
+│   │   ├── \_\_init\_\_.py
+
+│   │   ├── build\_features.py        # criação das features principais do modelo
+
+│   │   └── aggregation\_features.py  # features derivadas (agrupamentos, médias, etc.)
+
 │
-├── logs/          # logs da aplicação e pipeline de ML
-│                  # usados para debug, monitoramento e auditoria de execução
+
+│   ├── models/                  # lógica de machine learning
+
+│   │   ├── \_\_init\_\_.py
+
+│   │   ├── train.py             # treinamento do modelo
+
+│   │   └── predict.py           # inferência (previsões)
+
 │
-├── requirements.txt # dependências Python necessárias para rodar o projeto
+
+│   └── pipeline/                # pipelines oficiais do projeto
+
+│       ├── \_\_init\_\_.py
+
+│       └── training\_pipeline.py # fluxo completo: dados → features → modelo
+
 │
-├── .env             # variáveis de ambiente (tokens, caminhos, configs sensíveis)
-│                    # não deve ser versionado no Git
+
+├── wrapper/                     # camada de aplicação (API)
+
+│   ├── \_\_init\_\_.py
+
+│   ├── app.py                   # inicialização da aplicação (FastAPI)
+
+│   ├── routes.py                # definição dos endpoints da API
+
+│   ├── inference.py             # carregamento do modelo e execução de previsões
+
+│   └── settings.py              # configurações gerais (paths, variáveis, ambiente)
+
 │
-├── README.md        # documentação principal do projeto (visão geral, arquitetura e instruções de uso)
+
+├── frontend/                    # interface do usuário (camada visual)
+
+│   ├── static/                  # arquivos estáticos
+
+│   │   ├── css/style.css        # estilos da aplicação
+
+│   │   ├── js/app.js            # lógica de interação do frontend
+
+│   │   └── images/              # imagens utilizadas na interface
+
+│   │
+
+│   └── templates/
+
+│       └── index.html           # página principal renderizada pelo backend
+
 │
-├── PROJECT\_GUIDE.md   # guia rápido explicando como o sistema funciona (dados → modelo → API)
+
+├── models/                      # artefatos de modelos treinados
+
+│   ├── artifacts/               # arquivos do modelo (.pkl, .joblib)
+
+│   └── metadata.json            # informações do modelo (features, versão, data)
+
 │
-├── CONTRIBUTING.md    # regras para colaboração (branches, commits, estrutura de código)
+
+├── scripts/                     # scripts executáveis (automação)
+
+│   └── generate\_dataset.py      # script principal para geração do dataset sintético
+
 │
-└── .gitignore       # lista de arquivos e pastas ignoradas pelo Git
+
+├── deploy/                      # configuração de deploy (infraestrutura)
+
+│                               # ex: nginx, uvicorn, scripts de inicialização
+
+│
+
+├── reports/                     # relatórios finais (gráficos, análises e insights)
+
+│
+
+├── logs/                        # logs do sistema (execução, erros, auditoria)
+
+│
+
+├── requirements.txt             # dependências Python do projeto
+
+│
+
+├── .env                         # variáveis sensíveis (não versionar)
+
+│
+
+├── README.md                    # visão geral do projeto (porta de entrada)
+
+│
+
+├── PROJECT\_GUIDE.md             # guia rápido de funcionamento (como usar o sistema)
+
+│
+
+├── CONTRIBUTING.md              # regras para contribuição (padrões, commits, organização)
+
+│
+
+└── .gitignore                   # arquivos ignorados pelo Git
 
