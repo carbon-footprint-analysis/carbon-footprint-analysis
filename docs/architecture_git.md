@@ -2,189 +2,215 @@
 
 │
 
-├── docs/                         # documentação conceitual e estratégica do projeto (leitura obrigatória antes de codar)
+├── LICENSE                      # licença do projeto (define uso, distribuição e direitos)
 
-│   ├── press\_release.md          # visão do projeto como produto (problema, solução, impacto e proposta de valor)
-
-│   ├── faq.md                    # perguntas críticas (decisões técnicas, riscos, limitações e trade-offs)
-
-│   ├── crisp\_framework.md        # planejamento seguindo CRISP-DM (entendimento do problema até deploy)
-
-│   ├── architecture.md           # arquitetura do sistema (fluxo de dados, componentes e integração)
-
-│   ├── dataset\_schema.md         # definição das colunas e estrutura do dataset final (contrato de dados)
-
-│   └── data\_generation\_methodology.md  # lógica de geração dos dados sintéticos (regras, variabilidade e realismo)
+├── README.md                   # porta de entrada do projeto (visão geral + instruções rápidas)
 
 │
 
-├── data/                         # camada de dados do projeto (organizada por estágio do dado)
+├── data/                       # camada de dados (separada por estágio no pipeline)
 
-│   ├── raw/                      # dados originais (NUNCA modificar — fonte de verdade)
+│
 
-│   │   ├── aneel\_generation.csv  # dados reais de geração de energia (base para matriz energética)
+│   ├── raw/                    # dados brutos (NUNCA modificar — fonte de verdade)
 
-│   │   ├── epe\_consumption.csv   # dados reais de consumo energético por setor/região
+│   │   ├── ANEEL empreendimento-operacao-historico.csv   # dados reais de geração de energia no Brasil
 
-│   │   └── ...                   # outros datasets brutos utilizados como referência
+│   │   ├── EPE - CONSUMO E NUMCONSUMO POR REGIAO...      # consumo energético por região
+
+│   │   ├── EPE - CONSUMO SETOR INDUSTRIAL POR UF.csv     # consumo industrial detalhado
+
+│   │   └── EPE - Consumo-Mensal-Dicionario-de-Dados.pdf  # dicionário oficial dos dados (referência)
 
 │   │
 
-│   ├── external/                 # tabelas auxiliares usadas para gerar o dataset sintético (regras do sistema)
-
-│   │   ├── consumption\_profiles.csv       # faixas de consumo por tipo de uso (base para geração de valores)
-
-│   │   ├── efficiency\_profiles.csv        # variação de eficiência por uso (introduz realismo e variabilidade)
-
-│   │   ├── fuel\_parameters.csv            # fatores físicos (energia e emissão por combustível)
-
-│   │   ├── fuel\_distribution.csv          # probabilidade de uso de combustíveis por contexto
-
-│   │   ├── usage\_distribution.csv         # distribuição global dos tipos de uso (define proporção do dataset)
-
-│   │   ├── company\_profiles.csv           # perfis de empresas (impacto no consumo)
-
-│   │   ├── company\_size\_distribution.csv  # distribuição de tamanho das empresas (small, medium, large)
-
-│   │   └── energy\_source\_distribution.csv # distribuição das fontes elétricas (hidro, solar, etc.)
+│   ├── external/               # parâmetros e regras usadas na geração do dataset sintético
 
 │   │
 
-│   └── processed/                # dados finais prontos para análise e modelagem
+│   │   ├── consumption\_profiles.csv
 
-│       └── synthetic\_energy\_dataset.csv  # dataset sintético gerado pelo pipeline (principal output do projeto)
+│   │   │   # define faixas de consumo por tipo de uso (base da geração de valores)
+
+│   │
+
+│   │   ├── efficiency\_profiles.csv
+
+│   │   │   # define variação de eficiência por contexto (introduz realismo e evita dataset trivial)
+
+│   │
+
+│   │   ├── fuel\_parameters.csv
+
+│   │   │   # fatores físicos (energia por unidade e emissão de CO₂ por combustível)
+
+│   │
+
+│   │   ├── fuel\_distribution.csv
+
+│   │   │   # probabilidade de cada combustível por tipo de uso (realismo contextual)
+
+│   │
+
+│   │   ├── usage\_distribution.csv
+
+│   │   │   # distribuição global dos tipos de uso (define composição do dataset)
+
+│   │
+
+│   │   ├── company\_profiles.csv
+
+│   │   │   # perfis base de empresas (impacto no consumo e comportamento)
+
+│   │
+
+│   │   ├── company\_size\_distribution\_by\_usage.csv
+
+│   │   │   # distribuição de tamanho das empresas por tipo de uso (mais realismo estrutural)
+
+│   │
+
+│   │   ├── energy\_source\_distribution.csv
+
+│   │   │   # distribuição de fontes elétricas (hidro, solar, eólica, etc.)
+
+│   │   │   # usado quando fuel\_type = electric
+
+│   │
+
+│   │   ├── noise\_parameters.csv
+
+│   │   │   # parâmetros de ruído (aleatoriedade controlada para evitar dataset determinístico)
+
+│   │   │   # essencial para qualidade de ML (evita R² artificial)
+
+│   │
+
+│   ├── processed/              # dados finais gerados pelo pipeline
+
+│       # aqui será salvo o dataset sintético final pronto para análise/modelagem
 
 │
 
-├── notebooks/                   # notebooks para exploração (EDA) e testes (não usar para lógica final)
-
-│                               # servem para análise, validação e visualização dos dados
+├── docs/                       # documentação conceitual e técnica (guia obrigatório da equipe)
 
 │
 
-├── src/                         # código principal reutilizável do projeto (lógica de produção)
+│   ├── press\_release.md
 
-│   ├── \_\_init\_\_.py              # inicializa o pacote Python do projeto
+│   │   # descrição do projeto como produto (problema, solução e impacto)
 
 │
 
-│   ├── data/                    # ingestão e tratamento de dados
+│   ├── faq.md
+
+│   │   # perguntas críticas (decisões, limitações, riscos e justificativas técnicas)
+
+│
+
+│   ├── crisp\_framework.md
+
+│   │   # planejamento estruturado (CRISP-DM: negócio → dados → modelo → deploy)
+
+│
+
+│   ├── architecture\_git.md
+
+│   │   # organização do repositório e explicação da estrutura de pastas
+
+│
+
+│   ├── dataset\_schema.md
+
+│   │   # definição das colunas do dataset final (contrato de dados)
+
+│
+
+│   └── data\_generation\_methodology.md
+
+│       # lógica de geração do dataset (como os dados são criados e combinados)
+
+│
+
+├── notebooks/                  # análise exploratória (EDA) e testes
+
+│   # NÃO usar para lógica de produção (apenas experimentação)
+
+│
+
+├── src/                        # código principal reutilizável (lógica de produção)
+
+│
+
+│   ├── \_\_init\_\_.py             # inicializa o pacote Python
+
+│
+
+│   ├── data/                   # ingestão e preparação de dados
 
 │   │   ├── \_\_init\_\_.py
 
-│   │   ├── ingest.py            # leitura padronizada dos CSVs (raw e external)
+│   │   # ingest.py (futuro): leitura padronizada dos CSVs
 
-│   │   └── clean.py             # limpeza e padronização dos dados
+│   │   # clean.py  (futuro): limpeza e normalização
 
 │
 
-│   ├── features/                # criação de variáveis (feature engineering)
+│   ├── features/               # criação de features
 
 │   │   ├── \_\_init\_\_.py
 
-│   │   ├── build\_features.py        # criação das features principais do modelo
-
-│   │   └── aggregation\_features.py  # features derivadas (agrupamentos, médias, etc.)
+│   │   # transformação de dados em variáveis úteis para o modelo
 
 │
 
-│   ├── models/                  # lógica de machine learning
+│   ├── models/                 # lógica de machine learning
 
 │   │   ├── \_\_init\_\_.py
 
-│   │   ├── train.py             # treinamento do modelo
-
-│   │   └── predict.py           # inferência (previsões)
+│   │   # treinamento, avaliação e inferência
 
 │
 
-│   └── pipeline/                # pipelines oficiais do projeto
+│   └── pipeline/               # pipelines oficiais do projeto
 
 │       ├── \_\_init\_\_.py
 
-│       └── training\_pipeline.py # fluxo completo: dados → features → modelo
+│       # pipeline completo (geração → features → modelo)
 
 │
 
-├── wrapper/                     # camada de aplicação (API)
+├── scripts/                    # scripts executáveis (automação)
 
-│   ├── \_\_init\_\_.py
-
-│   ├── app.py                   # inicialização da aplicação (FastAPI)
-
-│   ├── routes.py                # definição dos endpoints da API
-
-│   ├── inference.py             # carregamento do modelo e execução de previsões
-
-│   └── settings.py              # configurações gerais (paths, variáveis, ambiente)
+│   # generate\_dataset.py será criado aqui (coração do projeto)
 
 │
 
-├── frontend/                    # interface do usuário (camada visual)
+├── wrapper/                    # camada de aplicação (API)
 
-│   ├── static/                  # arquivos estáticos
+│   └── \_\_init\_\_.py
 
-│   │   ├── css/style.css        # estilos da aplicação
-
-│   │   ├── js/app.js            # lógica de interação do frontend
-
-│   │   └── images/              # imagens utilizadas na interface
-
-│   │
-
-│   └── templates/
-
-│       └── index.html           # página principal renderizada pelo backend
+│   # integração do modelo com endpoints (FastAPI)
 
 │
 
-├── models/                      # artefatos de modelos treinados
+├── frontend/                   # interface do usuário
 
-│   ├── artifacts/               # arquivos do modelo (.pkl, .joblib)
+│   ├── static/                 # css, js e imagens
 
-│   └── metadata.json            # informações do modelo (features, versão, data)
-
-│
-
-├── scripts/                     # scripts executáveis (automação)
-
-│   └── generate\_dataset.py      # script principal para geração do dataset sintético
+│   └── templates/              # HTML renderizado
 
 │
 
-├── deploy/                      # configuração de deploy (infraestrutura)
+├── models/                     # modelos treinados
 
-│                               # ex: nginx, uvicorn, scripts de inicialização
-
-│
-
-├── reports/                     # relatórios finais (gráficos, análises e insights)
+│   └── artifacts/              # arquivos do modelo (.pkl, .joblib)
 
 │
 
-├── logs/                        # logs do sistema (execução, erros, auditoria)
+├── reports/                    # relatórios finais (insights, gráficos)
 
-│
+├── logs/                       # logs do sistema (debug e auditoria)
 
-├── requirements.txt             # dependências Python do projeto
-
-│
-
-├── .env                         # variáveis sensíveis (não versionar)
-
-│
-
-├── README.md                    # visão geral do projeto (porta de entrada)
-
-│
-
-├── PROJECT\_GUIDE.md             # guia rápido de funcionamento (como usar o sistema)
-
-│
-
-├── CONTRIBUTING.md              # regras para contribuição (padrões, commits, organização)
-
-│
-
-└── .gitignore                   # arquivos ignorados pelo Git
+├── deploy/                     # configuração de deploy (infraestrutura)
 
