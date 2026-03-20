@@ -1,0 +1,10 @@
+usage_type,eff_min,eff_max,distribution
+transport_road,0.75,1.15,normal
+transport_naval,0.70,1.10,normal
+residential,0.85,1.10,normal
+industry_metallurgy,0.60,1.05,normal
+industry_chemical,0.65,1.10,normal
+industry_manufacturing,0.70,1.10,normal
+commercial,0.80,1.10,normal
+agriculture,0.70,1.10,normal
+energy_generation,0.85,1.20,normal
