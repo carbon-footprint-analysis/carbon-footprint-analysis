@@ -1,38 +1,39 @@
-usage_type,fuel_type,avg_consumption,min,max,unit,distribution
-transport_road,gasoline,50,10,120,L,uniform
-transport_road,ethanol,50,10,120,L,uniform
-transport_road,diesel,45,10,110,L,uniform
-transport_road,electric,15,5,40,kWh,uniform
+usage_type,fuel_type,distribution_type,param_1,param_2,param_1_name,param_2_name,unit,is_energy_based
 
-transport_naval,diesel,400,100,1500,L,uniform
-transport_naval,lpg,400,100,1500,kg,uniform
-transport_naval,biogas,400,100,1500,m3,uniform
+transport_road,gasoline,uniform,10,120,min,max,L,false
+transport_road,ethanol,uniform,10,120,min,max,L,false
+transport_road,diesel,uniform,10,110,min,max,L,false
+transport_road,electric,uniform,5,40,min,max,kWh,true
 
-residential,electric,20,5,60,kWh,uniform
-residential,lpg,15,3,45,kg,uniform
-residential,biogas,15,3,45,m3,uniform
+transport_naval,diesel,uniform,100,1500,min,max,L,false
+transport_naval,lpg,uniform,100,1500,min,max,kg,false
+transport_naval,biogas,uniform,100,1500,min,max,m3,false
 
-commercial,electric,120,30,600,kWh,uniform
-commercial,lpg,90,20,450,kg,uniform
-commercial,diesel,90,20,450,L,uniform
-commercial,ethanol,90,20,450,L,uniform
+residential,electric,uniform,5,60,min,max,kWh,true
+residential,lpg,uniform,3,45,min,max,kg,false
+residential,biogas,uniform,3,45,min,max,m3,false
 
-agriculture,diesel,180,50,700,L,uniform
-agriculture,ethanol,180,50,700,L,uniform
-agriculture,electric,150,40,600,kWh,uniform
-agriculture,biogas,180,50,700,m3,uniform
+commercial,electric,uniform,30,600,min,max,kWh,true
+commercial,lpg,uniform,20,450,min,max,kg,false
+commercial,diesel,uniform,20,450,min,max,L,false
+commercial,ethanol,uniform,20,450,min,max,L,false
 
-industry_manufacturing,electric,300,100,1200,kWh,uniform
-industry_manufacturing,diesel,280,90,1100,L,uniform
-industry_manufacturing,lpg,280,90,1100,kg,uniform
-industry_manufacturing,ethanol,280,90,1100,L,uniform
+agriculture,diesel,uniform,50,700,min,max,L,false
+agriculture,ethanol,uniform,50,700,min,max,L,false
+agriculture,electric,uniform,40,600,min,max,kWh,true
+agriculture,biogas,uniform,50,700,min,max,m3,false
 
-industry_metallurgy,electric,800,300,3000,kWh,uniform
-industry_metallurgy,diesel,750,280,2800,L,uniform
-industry_metallurgy,coal,750,280,2800,kg,uniform
+industry_manufacturing,electric,uniform,100,1200,min,max,kWh,true
+industry_manufacturing,diesel,uniform,90,1100,min,max,L,false
+industry_manufacturing,lpg,uniform,90,1100,min,max,kg,false
+industry_manufacturing,ethanol,uniform,90,1100,min,max,L,false
 
-industry_chemical,electric,600,200,2000,kWh,uniform
-industry_chemical,ethanol,550,180,1800,L,uniform
-industry_chemical,lpg,550,180,1800,kg,uniform
+industry_metallurgy,electric,uniform,300,3000,min,max,kWh,true
+industry_metallurgy,diesel,uniform,280,2800,min,max,L,false
+industry_metallurgy,coal,uniform,280,2800,min,max,kg,false
 
-energy_generation,electric,3000,1000,10000,kWh,uniform
+industry_chemical,electric,uniform,200,2000,min,max,kWh,true
+industry_chemical,ethanol,uniform,180,1800,min,max,L,false
+industry_chemical,lpg,uniform,180,1800,min,max,kg,false
+
+energy_generation,electric,uniform,1000,10000,min,max,kWh,true
