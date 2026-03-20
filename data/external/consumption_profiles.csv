@@ -1,10 +1,10 @@
 usage_type,avg_consumption,min,max,unit
 transport_road,50,10,120,L
-transport_naval,500,100,2000,L
-residential,15,5,50,kWh
-industry_metallurgy,1000,300,5000,kWh
+transport_naval,400,100,1500,L
+residential,20,5,60,kWh
+commercial,120,30,600,kWh
+agriculture,180,50,700,L
+industry_manufacturing,300,100,1200,kWh
+industry_metallurgy,800,300,3000,kWh
 industry_chemical,600,200,2000,kWh
-industry_manufacturing,350,100,1500,kWh
-commercial,100,30,500,kWh
-agriculture,200,50,800,kWh
-energy_generation,5000,1000,20000,kWh
+energy_generation,3000,1000,10000,kWh
