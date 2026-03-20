@@ -1,0 +1,4 @@
+parameter,value,description
+noise_type,additive_gaussian,Tipo de ruído adicionado ao valor base
+noise_std_percent,0.05,Desvio padrão relativo (5% do valor base)
+random_seed,42,Semente para reprodutibilidade]
