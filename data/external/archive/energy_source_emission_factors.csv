@@ -1,0 +1,6 @@
+energy_source,emission_factor_kgco2_per_kwh
+hydro,0.024
+wind,0.012
+solar,0.045
+natural_gas,0.400
+biomass,0.100

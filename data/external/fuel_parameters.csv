@@ -1,8 +1,0 @@
-fuel_type,energy_factor_kwh_per_unit,emission_factor_kgco2_per_unit,unit
-gasoline,8.9,2.31,L
-diesel,10.7,2.68,L
-ethanol,6.1,1.5,L
-gnv,10.5,2.75,m3
-lpg,13.6,3.0,kg
-biogas,6.0,1.5,m3
-electric,1.0,variable,kWh
