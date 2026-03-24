@@ -1,6 +1,0 @@
-target,distribution_type,param_1,param_2,param_1_name,param_2_name,min_clip,max_clip,apply_to
-
-consumption,normal,0,0.05,mean,std,-0.2,0.2,multiplicative
-efficiency,normal,0,0.03,mean,std,-0.15,0.15,multiplicative
-co2_emission,normal,0,0.05,mean,std,-0.2,0.2,multiplicative
-energy_output,normal,0,0.02,mean,std,-0.1,0.1,multiplicative

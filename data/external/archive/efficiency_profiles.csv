@@ -1,0 +1,10 @@
+usage_type,distribution_type,param_1,param_2,param_1_name,param_2_name,interpretation_type
+transport_road,normal,0.95,0.08,mean,std,multiplicative_loss
+transport_naval,normal,0.90,0.10,mean,std,multiplicative_loss
+residential,normal,0.98,0.05,mean,std,multiplicative_loss
+industry_metallurgy,normal,0.85,0.12,mean,std,multiplicative_loss
+industry_chemical,normal,0.88,0.10,mean,std,multiplicative_loss
+industry_manufacturing,normal,0.90,0.10,mean,std,multiplicative_loss
+commercial,normal,0.95,0.07,mean,std,multiplicative_loss
+agriculture,normal,0.90,0.10,mean,std,multiplicative_loss
+energy_generation,normal,1.00,0.08,mean,std,multiplicative_loss
