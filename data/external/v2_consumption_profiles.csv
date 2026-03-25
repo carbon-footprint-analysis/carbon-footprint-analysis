@@ -1,6 +1,0 @@
-usage_type,fuel_type,distribution_type,param_1,param_2,param_1_name,param_2_name,unit,is_energy_based
-Industrial,eletrico,lognormal,10.512328219520564,0.6,mu,sigma,kWh,True
-Residencial,eletrico,lognormal,5.183939326288349,0.3,mu,sigma,kWh,True
-Comercial,eletrico,lognormal,7.231605853210544,0.4,mu,sigma,kWh,True
-Outros,eletrico,lognormal,8.490598465025943,0.35,mu,sigma,kWh,True
-Rural,eletrico,lognormal,6.509095828740055,0.35,mu,sigma,kWh,True

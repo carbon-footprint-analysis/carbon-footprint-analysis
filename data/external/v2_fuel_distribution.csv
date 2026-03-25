@@ -1,5 +1,0 @@
-usage_type,fuel_type,probability
-residential,electric,1.0
-commercial,electric,1.0
-industrial,electric,1.0
-rural,electric,1.0
