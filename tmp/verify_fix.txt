@@ -1,0 +1,25 @@
+def sample_company_size(usage_type):
+    """
+    Sample a company size for the given usage_type.
+    Falls back to 'small' if no matching category is found.
+    Defensive: uses .values arrays to avoid pandas/numpy Series issues.
+    """
+    subset = company_size_dist[company_size_dist['Classe'] == usage_type].copy()
+
+    if subset.empty:
+        # No match found - normalization mismatch or missing category; default to 'small'
+        return 'small'
+
+    sizes = subset['company_size'].values
+    probs = subset['probability'].values.astype(float)
+
+    if len(sizes) == 0:
+        return 'small'
+
+    # Re-normalize probabilities to guard against floating-point rounding
+    total = probs.sum()
+    if total <= 0:
+        return 'small'
+    probs = probs / total
+
+    return np.random.choice(sizes, p=probs)

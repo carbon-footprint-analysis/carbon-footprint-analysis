@@ -1,0 +1,2 @@
+replace result: ['commercial', 'industrial', 'other', 'residential', 'agriculture']
+map result: ['commercial', 'industrial', 'other', 'residential', 'agriculture']

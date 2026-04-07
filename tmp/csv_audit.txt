@@ -1,0 +1,35 @@
+=== v2_consumption_profiles ===
+Columns: ['usage_type', 'fuel_type', 'distribution_type', 'param_1', 'param_2', 'param_1_name', 'param_2_name', 'unit', 'is_energy_based']
+  usage_type: ['agriculture', 'commercial', 'industrial', 'other', 'residential']
+  fuel_type: ['electric']
+  distribution_type: ['lognormal']
+  param_1_name: ['mu']
+  param_2_name: ['sigma']
+  unit: ['kWh']
+
+=== v2_energy_source_distribution ===
+Columns: ['Unnamed: 0', 'energy_source', 'probability']
+  energy_source: ['hydro', 'nuclear', 'solar', 'thermal', 'wind']
+
+=== v2_energy_source_emission_factors ===
+Columns: ['energy_source', 'emission_factor']
+  energy_source: ['hydro', 'nuclear', 'solar', 'thermal', 'wind']
+
+=== v2_company_size_distribution_by_usage ===
+Columns: ['Classe', 'company_size', 'probability']
+  Classe: ['Comercial', 'Industrial', 'Outros', 'Residencial', 'Rural']
+  company_size: ['large', 'medium', 'small']
+
+=== v2_usage_distribution_by_state (columns) ===
+Columns: ['UF', 'commercial', 'industrial', 'other', 'residential', 'agriculture']
+  UF: ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO']
+
+=== v2_seasonality_state_class_month ===
+Columns: ['UF', 'Classe', 'month', 'seasonal_factor', 'var']
+  UF: ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO']
+  Classe: ['Comercial', 'Industrial', 'Outros', 'Residencial', 'Rural']
+
+=== v2_state_distribution ===
+Columns: ['UF', 'Consumo']
+  UF: ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO']
+

@@ -1,0 +1,79 @@
+=== Cell 154 ===
+size_dist.to_csv(
+    '../data/processed/v2_company_size_distribution_by_usage.csv',
+    index=False
+)
+
+=== Cell 176 ===
+import pandas as pd
+import numpy as np
+
+profiles = pd.read_csv('../data/processed/v2_consumption_profiles.csv')
+
+energy_dist = pd.read_csv('../data/processed/v2_energy_source_distribution.csv')
+
+emission_df = pd.read_csv('../data/processed/v2_energy_source_emission_factors.csv')
+
+usage_distribution_by_state = pd.read_csv(
+    '../data/processed/v2_usage_distribution_by_state.csv',
+    index_col=0
+)
+
+company_size_dist = pd.read_csv(
+    '../data/processed/v2_company_size_distribution_by_usage.csv'
+)
+
+seasonality = pd.read_csv(
+    '../data/processed/v2_seasonality_state_class_month.csv'
+)
+
+=== Cell 178 ===
+category_map = {
+    'comercial': 'commercial',
+    'industrial': 'industrial',
+    'outros': 'other',
+    'residencial': 'residential',
+    'rural': 'agriculture'
+}
+
+def normalize_classe(df, col):
+    df[col] = df[col].astype(str).str.lower().replace(category_map)
+
+normalize_classe(profiles, 'usage_type')
+normalize_classe(company_size_dist, 'Classe')
+normalize_classe(seasonality, 'Classe')
+
+usage_distribution_by_state.columns = [category_map.get(c.lower(), c.lower()) for c in usage_distribution_by_state.columns]
+
+=== Cell 179 ===
+print('profiles: '+profiles.columns,'\n')
+print('energy_dist: '+energy_dist.columns,'\n')
+print('emission_df: '+emission_df.columns,'\n')
+print('usage_distribution_by_state: '+usage_distribution_by_state.columns,'\n')
+print('company_size_dist: '+company_size_dist.columns,'\n')
+print('seasonality: '+seasonality.columns,'\n')
+
+=== Cell 181 ===
+show_uniques(profiles, "profiles")
+show_uniques(company_size_dist, "company_size_dist")
+show_uniques(usage_distribution_by_state, "usage_distribution")
+show_uniques(seasonality, "seasonality")
+
+=== Cell 182 ===
+print(set(profiles['usage_type']))
+print(set(company_size_dist['Classe']))
+print(set(usage_distribution_by_state.columns))
+print(set(seasonality['Classe']))
+
+=== Cell 183 ===
+print("usage_types possíveis:", usage_distribution_by_state.columns.tolist())
+print("classes em company_size:", company_size_dist['Classe'].unique())
+
+=== Cell 184 ===
+for u in usage_distribution_by_state.columns:
+    subset = company_size_dist[company_size_dist['Classe'] == u]
+    print(u, "->", len(subset))
+
+=== Cell 186 ===
+print(company_size_dist.groupby('Classe')['probability'].sum())
+

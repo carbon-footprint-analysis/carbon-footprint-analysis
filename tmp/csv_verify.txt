@@ -1,0 +1,25 @@
+=== v2_consumption_profiles ===
+  usage_type: ['comercial', 'industrial', 'outros', 'residencial', 'rural']
+  fuel_type: ['electric']
+  distribution_type: ['lognormal']
+  param_1_name: ['mu']
+  param_2_name: ['sigma']
+  unit: ['kWh']
+
+=== v2_energy_source_distribution ===
+  energy_source: ['eólica', 'hidrelétrica', 'nuclear', 'solar', 'térmica']
+
+=== v2_energy_source_emission_factors ===
+  energy_source: ['eólica', 'hidrelétrica', 'nuclear', 'solar', 'térmica']
+
+=== v2_company_size_distribution_by_usage ===
+  Classe: ['comercial', 'industrial', 'outros', 'residencial', 'rural']
+  company_size: ['grande', 'média', 'pequena']
+
+=== v2_usage_distribution_by_state ===
+  UF: ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO']
+
+=== v2_seasonality ===
+  UF: ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO']
+  Classe: ['comercial', 'industrial', 'outros', 'residencial', 'rural']
+

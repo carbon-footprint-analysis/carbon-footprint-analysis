@@ -1,0 +1,17 @@
+Cell 178:
+category_map = {
+    'comercial': 'commercial',
+    'industrial': 'industrial',
+    'outros': 'other',
+    'residencial': 'residential',
+    'rural': 'agriculture'
+}
+
+def normalize_classe(df, col):
+    df[col] = df[col].astype(str).str.lower().replace(category_map)
+
+normalize_classe(profiles, 'usage_type')
+normalize_classe(company_size_dist, 'Classe')
+normalize_classe(seasonality, 'Classe')
+
+usage_distribution_by_state.columns = [category_map.get(c.lower(), c.lower()) for c in usage_distribution_by_state.columns]

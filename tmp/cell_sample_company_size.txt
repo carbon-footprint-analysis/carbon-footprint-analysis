@@ -1,0 +1,19 @@
+Cell 194:
+def sample_company_size(usage_type):
+
+    subset = company_size_dist[company_size_dist['Classe'] == usage_type]
+
+    if subset.empty:
+        return 'small'
+
+    if len(subset) == 1:
+        return subset['company_size'].iloc[0]
+
+    # Renormalize probabilities
+    probs = subset['probability']
+    probs = probs / probs.sum()
+
+    return np.random.choice(
+        subset['company_size'],
+        p=probs
+    )

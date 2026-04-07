@@ -1,0 +1,154 @@
+Cell 198:
+def generate_event(profiles):
+
+    # -------------------------------------------------
+    # 1) Escolha do estado
+    # -------------------------------------------------
+    state = np.random.choice(states, p=state_weights)
+
+
+    # -------------------------------------------------
+    # 2) Sorteio do mês
+    # -------------------------------------------------
+    month = np.random.randint(1, 13)
+
+
+    # -------------------------------------------------
+    # 3) Setor econômico condicionado ao estado
+    # -------------------------------------------------
+    usage_probs_state = usage_distribution_by_state.loc[state].values
+    usage_probs_state = usage_probs_state / usage_probs_state.sum()
+
+    usage_types = usage_distribution_by_state.columns
+
+    usage_type = np.random.choice(
+        usage_types,
+        p=usage_probs_state
+    )
+
+
+    # -------------------------------------------------
+    # 4) Perfil do setor
+    # -------------------------------------------------
+    profiles_subset = profiles[profiles['usage_type'] == usage_type]
+
+    if profiles_subset.empty:
+        raise ValueError(f"Nenhum profile encontrado para {usage_type}")
+
+    row = profiles_subset.sample(1).iloc[0]
+
+
+    # -------------------------------------------------
+    # 5) Consumo base
+    # -------------------------------------------------
+    consumption = generate_consumption(row)
+
+
+    # -------------------------------------------------
+    # 6) Ajuste de sazonalidade
+    # -------------------------------------------------
+    consumption = apply_seasonality(
+        consumption,
+        state,
+        usage_type,
+        month
+    )
+
+
+    # -------------------------------------------------
+    # 7) RUÍDO REALISTA DE CONSUMO
+    # -------------------------------------------------
+    # Mesmo equipamentos idênticos nunca operam exatamente
+    # no mesmo regime. Pequenas variações operacionais,
+    # carga parcial e comportamento do usuário geram
+    # flutuações naturais no consumo energético.
+    #
+    # Usamos um ruído multiplicativo moderado (~8%).
+    #
+    operational_variation = np.random.normal(1, 0.08)
+    consumption = consumption * operational_variation
+
+
+    # -------------------------------------------------
+    # 8) Tamanho da empresa
+    # -------------------------------------------------
+    company_size = sample_company_size(usage_type)
+
+
+    # -------------------------------------------------
+    # 9) Fonte energética
+    # -------------------------------------------------
+    energy_source = sample_energy_source(energy_dist)
+
+
+    # -------------------------------------------------
+    # 10) Emissão base (sua lógica atual)
+    # -------------------------------------------------
+    co2 = calculate_emission(consumption, energy_source, emission_df)
+
+
+    # -------------------------------------------------
+    # 11) VARIAÇÃO REAL DO FATOR DE EMISSÃO
+    # -------------------------------------------------
+    # Mesmo dentro da mesma fonte energética existe
+    # variação operacional:
+    #
+    # • qualidade do combustível
+    # • eficiência da planta
+    # • mistura de geração
+    # • condições de operação
+    #
+    # Isso é modelado como uma pequena variação
+    # no fator efetivo de emissão (~6%).
+    #
+    emission_factor_variation = np.random.normal(1, 0.06)
+    co2 = co2 * emission_factor_variation
+
+
+    # -------------------------------------------------
+    # 12) RUÍDO FINAL DE MEDIÇÃO / PROCESSO
+    # -------------------------------------------------
+    # Última camada de ruído representa:
+    #
+    # • imprecisão de medição
+    # • pequenas perdas do sistema
+    # • arredondamentos operacionais
+    #
+    measurement_noise = np.random.normal(1, 0.03)
+    co2 = co2 * measurement_noise
+
+
+    # -------------------------------------------------
+    # 13) Data dentro do mês sorteado
+    # -------------------------------------------------
+    date = (
+        pd.Timestamp('2025-01-01')
+        + pd.DateOffset(months=month-1)
+        + pd.to_timedelta(np.random.randint(0,28), unit='D')
+    )
+
+
+    # -------------------------------------------------
+    # 14) Retorno do evento
+    # -------------------------------------------------
+    return {
+
+        'company_id': f"C{np.random.randint(100000,999999)}",
+
+        'date': date,
+
+        'state': state,
+
+        'usage_type': usage_type,
+
+        'company_size': company_size,
+
+        'fuel_type': row['fuel_type'],
+
+        'energy_kwh': consumption,
+
+        'energy_source': energy_source,
+
+        'co2_emission': co2
+    }
+

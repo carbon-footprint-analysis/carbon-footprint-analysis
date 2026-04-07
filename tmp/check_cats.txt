@@ -1,0 +1,4 @@
+company_size classes: ['agriculture', 'commercial', 'industrial', 'other', 'residential']
+usage_dist columns: ['agriculture', 'commercial', 'industrial', 'other', 'residential']
+In usage but NOT in company_size: []
+In company_size but NOT in usage: []

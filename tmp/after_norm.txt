@@ -1,0 +1,15 @@
+['commercial' 'industrial' 'other' 'residential' 'agriculture']
+         Classe company_size  probability
+0    commercial        large     0.736990
+1    commercial       medium     0.174402
+2    commercial        small     0.088608
+3    industrial        small     0.459198
+4    industrial        large     0.343015
+5    industrial       medium     0.197787
+6         other        large     0.438028
+7         other       medium     0.339437
+8         other        small     0.222535
+9   residential        small     1.000000
+10  agriculture        small     0.525937
+11  agriculture        large     0.247839
+12  agriculture       medium     0.226225
