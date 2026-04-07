@@ -25,11 +25,10 @@ def get_season(month):
     return 'Primavera'
 df['season'] = df['month'].apply(get_season)
 
-# Features and target
+# Seleção de atributos e target
 target = 'co2_emission'
-features = ['energy_kwh', 'state', 'usage_type', 'energy_source', 'month', 'season']
-
-X = df[features]
+# Removemos o target e colunas não-preditivas (IDs e Datas brutas)
+X = df.drop(columns=[target, 'company_id', 'date'])
 y = df[target]
 
 # Train/Test Split (we train on the whole set for the final model deployment)

@@ -26,10 +26,10 @@ def get_season(month):
     return 'Primavera'
 df['season'] = df['month'].apply(get_season)
 
-# Features
+# Seleção de atributos e target
 target = 'co2_emission'
-features = ['energy_kwh', 'state', 'usage_type', 'energy_source', 'month', 'season']
-X = df[features]
+# Removemos o target e colunas não-preditivas (IDs e Datas brutas)
+X = df.drop(columns=[target, 'company_id', 'date'])
 y = df[target]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
