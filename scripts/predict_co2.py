@@ -23,7 +23,7 @@ def main():
 
     # Path to model
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(script_dir, '..', 'models', 'carbon_footprint_rf_v1.joblib')
+    model_path = os.path.join(script_dir, '..', 'models', 'best_carbon_footprint_model.joblib')
 
     if not os.path.exists(model_path):
         print(f"ERRO: Arquivo do modelo não encontrado em {model_path}")
