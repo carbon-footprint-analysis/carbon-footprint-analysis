@@ -1,0 +1,4637 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "UBzkNq-YKS1N"
+      },
+      "source": [
+        "# Build Dataset Generation Config\n",
+        "\n",
+        "This notebook processes official energy data from:\n",
+        "\n",
+        "- EPE (Empresa de Pesquisa Energética)\n",
+        "- ANEEL (Agência Nacional de Energia Elétrica)\n",
+        "\n",
+        "The goal is to generate the probabilistic configuration files used by the synthetic dataset generator.\n",
+        "\n",
+        "Outputs:\n",
+        "- consumption_profiles.csv\n",
+        "- energy_source_distribution.csv\n",
+        "- company_size_distribution_by_usage.csv\n",
+        "- usage_distribution_by_state.csv\n",
+        "- seasonality_state_class_month.csv"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "58cvymvCwXG6"
+      },
+      "source": [
+        "Clona Projeto direto do github para facilitar"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "lY4MCheLnQOe",
+        "outputId": "2a671605-6e47-48b3-af10-9b4a965442bb"
+      },
+      "outputs": [],
+      "source": [
+        "# # !git clone https://github.com/carbon-footprint-analysis/carbon-footprint-analysis.git"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "sofJUDzOwjXL"
+      },
+      "source": [
+        "importa dados oficiais da empresa de pesquisa energetica e faz EDA + ETL para criar o dataset sintetico ainda !\n",
+        "\n",
+        "Abaixo e o data set de consumo por categoria e estado o consumo esta em MW mas abaixo sera convertido para kwh"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "id": "Uzl-9qS1srUb"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "\n",
+        "epe = pd.read_csv('../data/raw/epe_industrial_consumption_by_state.csv',\n",
+        "                    encoding='latin-1',\n",
+        "                    sep=';',\n",
+        "                    decimal=',')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 3,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "Sk7hXrlcepsQ",
+        "outputId": "43826ecf-d51c-4612-b2ea-3e482452ccfc"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Coluna1</th>\n",
+              "      <th>DataExcel</th>\n",
+              "      <th>SetorIndustrial</th>\n",
+              "      <th>UF</th>\n",
+              "      <th>Regiao</th>\n",
+              "      <th>Consumo</th>\n",
+              "      <th>DataVersao</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>01/12/2025</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>AM</td>\n",
+              "      <td>Norte</td>\n",
+              "      <td>15.000</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>01/12/2025</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>DF</td>\n",
+              "      <td>Centro-Oeste</td>\n",
+              "      <td>1.077</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>01/12/2025</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>ES</td>\n",
+              "      <td>Sudeste</td>\n",
+              "      <td>23.000</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>01/12/2025</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>MA</td>\n",
+              "      <td>Nordeste</td>\n",
+              "      <td>39.586</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>01/12/2025</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>MG</td>\n",
+              "      <td>Sudeste</td>\n",
+              "      <td>20994.000</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "    Coluna1   DataExcel                  SetorIndustrial  UF        Regiao  \\\n",
+              "0  20251201  01/12/2025  05 - EXTRAÇÃO DE CARVÃO MINERAL  AM         Norte   \n",
+              "1  20251201  01/12/2025  05 - EXTRAÇÃO DE CARVÃO MINERAL  DF  Centro-Oeste   \n",
+              "2  20251201  01/12/2025  05 - EXTRAÇÃO DE CARVÃO MINERAL  ES       Sudeste   \n",
+              "3  20251201  01/12/2025  05 - EXTRAÇÃO DE CARVÃO MINERAL  MA      Nordeste   \n",
+              "4  20251201  01/12/2025  05 - EXTRAÇÃO DE CARVÃO MINERAL  MG       Sudeste   \n",
+              "\n",
+              "     Consumo  DataVersao  \n",
+              "0     15.000  23/02/2026  \n",
+              "1      1.077  23/02/2026  \n",
+              "2     23.000  23/02/2026  \n",
+              "3     39.586  23/02/2026  \n",
+              "4  20994.000  23/02/2026  "
+            ]
+          },
+          "execution_count": 3,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "epe.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 4,
+      "metadata": {
+        "id": "ugULYpDufubw"
+      },
+      "outputs": [],
+      "source": [
+        "epe['DataExcel'] = pd.to_datetime(epe['DataExcel'], dayfirst=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 5,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ebkrWYWygOyX",
+        "outputId": "6dcf608b-9d67-4b2a-f99c-eb696238bf3a"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 135676 entries, 0 to 135675\n",
+            "Data columns (total 7 columns):\n",
+            " #   Column           Non-Null Count   Dtype         \n",
+            "---  ------           --------------   -----         \n",
+            " 0   Coluna1          135676 non-null  int64         \n",
+            " 1   DataExcel        135676 non-null  datetime64[ns]\n",
+            " 2   SetorIndustrial  135676 non-null  object        \n",
+            " 3   UF               135676 non-null  object        \n",
+            " 4   Regiao           135676 non-null  object        \n",
+            " 5   Consumo          135676 non-null  float64       \n",
+            " 6   DataVersao       135676 non-null  object        \n",
+            "dtypes: datetime64[ns](1), float64(1), int64(1), object(4)\n",
+            "memory usage: 7.2+ MB\n"
+          ]
+        }
+      ],
+      "source": [
+        "epe.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 6,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "B7mCIrK7T8yR",
+        "outputId": "825c619e-4ac9-4f94-906b-9c2564e6d35b"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/plain": [
+              "array(['05 - EXTRAÇÃO DE CARVÃO MINERAL',\n",
+              "       '06 - EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL',\n",
+              "       '07 - EXTRAÇÃO DE MINERAIS METÁLICOS',\n",
+              "       '08 - EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS',\n",
+              "       '09 - ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS',\n",
+              "       '10 - FABRICAÇÃO DE PRODUTOS ALIMENTÍCIOS',\n",
+              "       '11 - FABRICAÇÃO DE BEBIDAS',\n",
+              "       '12 - FABRICAÇÃO DE PRODUTOS DO FUMO',\n",
+              "       '13 - FABRICAÇÃO DE PRODUTOS TÊXTEIS',\n",
+              "       '14 - CONFECÇÃO DE ARTIGOS DO VESTUÁRIO E ACESSÓRIOS',\n",
+              "       '15 - PREPARAÇÃO DE COUROS E FABRICAÇÃO DE ARTEFATOS DE COURO, ARTIGOS PARA VIAGEM E CALÇADOS',\n",
+              "       '16 - FABRICAÇÃO DE PRODUTOS DE MADEIRA',\n",
+              "       '17 - FABRICAÇÃO DE CELULOSE, PAPEL E PRODUTOS DE PAPEL',\n",
+              "       '18 - IMPRESSÃO E REPRODUÇÃO DE GRAVAÇÕES',\n",
+              "       '19 - FABRICAÇÃO DE COQUE, DE PRODUTOS DERIVADOS DO PETRÓLEO E DE BIOCOMBUSTÍVEIS',\n",
+              "       '20 - FABRICAÇÃO DE PRODUTOS QUÍMICOS',\n",
+              "       '21 - FABRICAÇÃO DE PRODUTOS FARMOQUÍMICOS E FARMACÊUTICOS',\n",
+              "       '22 - FABRICAÇÃO DE PRODUTOS DE BORRACHA E DE MATERIAL PLÁSTICO',\n",
+              "       '23 - FABRICAÇÃO DE PRODUTOS DE MINERAIS NÃO-METÁLICOS',\n",
+              "       '24 - METALURGIA',\n",
+              "       '25 - FABRICAÇÃO DE PRODUTOS DE METAL, EXCETO MÁQUINAS E EQUIPAMENTOS',\n",
+              "       '26 - FABRICAÇÃO DE EQUIPAMENTOS DE INFORMÁTICA, PRODUTOS ELETRÔNICOS E ÓPTICOS',\n",
+              "       '27 - FABRICAÇÃO DE MÁQUINAS, APARELHOS E MATERIAIS ELÉTRICOS',\n",
+              "       '28 - FABRICAÇÃO DE MÁQUINAS E EQUIPAMENTOS',\n",
+              "       '29 - FABRICAÇÃO DE VEÍCULOS AUTOMOTORES, REBOQUES E CARROCERIAS',\n",
+              "       '30 - FABRICAÇÃO DE OUTROS EQUIPAMENTOS DE TRANSPORTE, EXCETO VEÍCULOS AUTOMOTORES',\n",
+              "       '31 - FABRICAÇÃO DE MÓVEIS',\n",
+              "       '32 - FABRICAÇÃO DE PRODUTOS DIVERSOS',\n",
+              "       '33 - MANUTENÇÃO, REPARAÇÃO E INSTALAÇÃO DE MÁQUINAS E EQUIPAMENTOS',\n",
+              "       '35 - ELETRICIDADE, GÁS E OUTRAS UTILIDADES',\n",
+              "       '36 - CAPTAÇÃO, TRATAMENTO E DISTRIBUIÇÃO DE ÁGUA',\n",
+              "       '37 - ESGOTO E ATIVIDADES RELACIONADAS',\n",
+              "       '38 - COLETA, TRATAMENTO E DISPOSIÇÃO DE RESÍDUOS; RECUPERAÇÃO DE MATERIAIS',\n",
+              "       '39 - DESCONTAMINAÇÃO E OUTROS SERVIÇOS DE GESTÃO DE RESÍDUOS',\n",
+              "       '41 - CONSTRUÇÃO DE EDIFÍCIOS', '42 - OBRAS DE INFRA-ESTRUTURA',\n",
+              "       '43 - SERVIÇOS ESPECIALIZADOS PARA CONSTRUÇÃO'], dtype=object)"
+            ]
+          },
+          "execution_count": 6,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "epe['SetorIndustrial'].unique()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "id": "MlzV9KJvUZZs"
+      },
+      "outputs": [],
+      "source": [
+        "df = epe.copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 8,
+      "metadata": {
+        "id": "u_p4T_gQWHKJ"
+      },
+      "outputs": [],
+      "source": [
+        "df['year'] = df['DataExcel'].dt.year\n",
+        "df['month'] = df['DataExcel'].dt.month"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 9,
+      "metadata": {
+        "id": "ylqfzN7QWRyY"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025 = df[df['year'] == 2025].copy()\n",
+        "df_2025.drop(columns=['DataVersao', 'DataExcel'], inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 10,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "rqT9i2U0Wahx",
+        "outputId": "4321acac-0397-47a5-a7ba-5486bfd08a2a"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Coluna1</th>\n",
+              "      <th>SetorIndustrial</th>\n",
+              "      <th>UF</th>\n",
+              "      <th>Regiao</th>\n",
+              "      <th>Consumo</th>\n",
+              "      <th>year</th>\n",
+              "      <th>month</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>AM</td>\n",
+              "      <td>Norte</td>\n",
+              "      <td>15.000</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>DF</td>\n",
+              "      <td>Centro-Oeste</td>\n",
+              "      <td>1.077</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>ES</td>\n",
+              "      <td>Sudeste</td>\n",
+              "      <td>23.000</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>MA</td>\n",
+              "      <td>Nordeste</td>\n",
+              "      <td>39.586</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>MG</td>\n",
+              "      <td>Sudeste</td>\n",
+              "      <td>20994.000</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "    Coluna1                  SetorIndustrial  UF        Regiao    Consumo  \\\n",
+              "0  20251201  05 - EXTRAÇÃO DE CARVÃO MINERAL  AM         Norte     15.000   \n",
+              "1  20251201  05 - EXTRAÇÃO DE CARVÃO MINERAL  DF  Centro-Oeste      1.077   \n",
+              "2  20251201  05 - EXTRAÇÃO DE CARVÃO MINERAL  ES       Sudeste     23.000   \n",
+              "3  20251201  05 - EXTRAÇÃO DE CARVÃO MINERAL  MA      Nordeste     39.586   \n",
+              "4  20251201  05 - EXTRAÇÃO DE CARVÃO MINERAL  MG       Sudeste  20994.000   \n",
+              "\n",
+              "   year  month  \n",
+              "0  2025     12  \n",
+              "1  2025     12  \n",
+              "2  2025     12  \n",
+              "3  2025     12  \n",
+              "4  2025     12  "
+            ]
+          },
+          "execution_count": 10,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_2025.head(5)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 11,
+      "metadata": {
+        "id": "VcH85TD9Wbzh"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped = df.groupby('SetorIndustrial')['Consumo'].mean().reset_index()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 12,
+      "metadata": {
+        "id": "wTaLTDw4YBVc"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped = df_grouped.rename(columns={'Consumo':'Consumo_MWh'})"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 13,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "aSIY4djWW7IR",
+        "outputId": "d9aeb62d-34d6-4bbe-a6a1-27de1e2e50f3"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>SetorIndustrial</th>\n",
+              "      <th>Consumo_MWh</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>658.978726</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>06 - EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL</td>\n",
+              "      <td>8514.621995</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>07 - EXTRAÇÃO DE MINERAIS METÁLICOS</td>\n",
+              "      <td>43036.799370</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>08 - EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS</td>\n",
+              "      <td>11104.061692</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>09 - ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS</td>\n",
+              "      <td>739.495885</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "                                   SetorIndustrial   Consumo_MWh\n",
+              "0                  05 - EXTRAÇÃO DE CARVÃO MINERAL    658.978726\n",
+              "1          06 - EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL   8514.621995\n",
+              "2              07 - EXTRAÇÃO DE MINERAIS METÁLICOS  43036.799370\n",
+              "3          08 - EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS  11104.061692\n",
+              "4  09 - ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS    739.495885"
+            ]
+          },
+          "execution_count": 13,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_grouped.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 14,
+      "metadata": {
+        "id": "Rz79qs1rma0b"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped['Consumo_kWh'] = (df_grouped['Consumo_MWh']) * 1000"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 15,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "G0DjRYAooPBm",
+        "outputId": "899cb8a9-6cb1-4c59-8ae3-1705c70cdceb"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>SetorIndustrial</th>\n",
+              "      <th>Consumo_MWh</th>\n",
+              "      <th>Consumo_kWh</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>658.978726</td>\n",
+              "      <td>6.589787e+05</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>06 - EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL</td>\n",
+              "      <td>8514.621995</td>\n",
+              "      <td>8.514622e+06</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>07 - EXTRAÇÃO DE MINERAIS METÁLICOS</td>\n",
+              "      <td>43036.799370</td>\n",
+              "      <td>4.303680e+07</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>08 - EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS</td>\n",
+              "      <td>11104.061692</td>\n",
+              "      <td>1.110406e+07</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>09 - ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS</td>\n",
+              "      <td>739.495885</td>\n",
+              "      <td>7.394959e+05</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "                                   SetorIndustrial   Consumo_MWh   Consumo_kWh\n",
+              "0                  05 - EXTRAÇÃO DE CARVÃO MINERAL    658.978726  6.589787e+05\n",
+              "1          06 - EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL   8514.621995  8.514622e+06\n",
+              "2              07 - EXTRAÇÃO DE MINERAIS METÁLICOS  43036.799370  4.303680e+07\n",
+              "3          08 - EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS  11104.061692  1.110406e+07\n",
+              "4  09 - ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS    739.495885  7.394959e+05"
+            ]
+          },
+          "execution_count": 15,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_grouped.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 16,
+      "metadata": {
+        "id": "IRwUq-kDW8kS"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped.to_csv('../data/processed/media_consumo_indutria_2025.csv')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "HBZGN1HTxo2w"
+      },
+      "source": [
+        "Abertura do dados oficial consumo mensal por categoria a escala de energia esta em MW mas sera convertido em kwh.\n",
+        "\n",
+        "Tambem foi feito o EDA e ETL para criação do dataset sintetico !"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 17,
+      "metadata": {
+        "id": "3NyeM9OkYsjJ"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "\n",
+        "epe_categoria = pd.read_csv('../data/raw/EPE - Dados_abertos_Consumo_Mensal.CSV',\n",
+        "                    encoding='latin-1',\n",
+        "                    sep=';',\n",
+        "                    decimal=',')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 18,
+      "metadata": {
+        "id": "ZVPxu3vuN_wG"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025 = df[df['year'] == 2025].copy()\n",
+        "df_2025.drop(columns=['DataVersao', 'DataExcel'], inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 19,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ux4S9FNXdsfp",
+        "outputId": "b549151a-54ec-4428-f4a3-98192ab1d574"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 59243 entries, 0 to 59242\n",
+            "Data columns (total 10 columns):\n",
+            " #   Column          Non-Null Count  Dtype \n",
+            "---  ------          --------------  ----- \n",
+            " 0   Data            59243 non-null  int64 \n",
+            " 1   DataExcel       59243 non-null  object\n",
+            " 2   UF              59243 non-null  object\n",
+            " 3   Regiao          59243 non-null  object\n",
+            " 4   Sistema         59243 non-null  object\n",
+            " 5   Classe          59243 non-null  object\n",
+            " 6   TipoConsumidor  59243 non-null  object\n",
+            " 7   Consumo         59243 non-null  object\n",
+            " 8   Consumidores    59243 non-null  object\n",
+            " 9   DataVersao      59243 non-null  object\n",
+            "dtypes: int64(1), object(9)\n",
+            "memory usage: 4.5+ MB\n"
+          ]
+        }
+      ],
+      "source": [
+        "epe_categoria.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 20,
+      "metadata": {
+        "id": "yeMBtvRmdvBc"
+      },
+      "outputs": [],
+      "source": [
+        "epe_categoria['DataExcel'] = pd.to_datetime(epe_categoria['DataExcel'], dayfirst=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 21,
+      "metadata": {
+        "id": "hpAGLGz1eFJ9"
+      },
+      "outputs": [],
+      "source": [
+        "df = epe_categoria.copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 22,
+      "metadata": {
+        "id": "2V4ls_CpeIxj"
+      },
+      "outputs": [],
+      "source": [
+        "df['year'] = df['DataExcel'].dt.year\n",
+        "df['month'] = df['DataExcel'].dt.month"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 23,
+      "metadata": {
+        "id": "p7SetKUTeMqK"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025 = df[df['year'] == 2025]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 24,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Siz3e1r2sHgw",
+        "outputId": "3a0e87b7-bbb7-41ee-d656-f140d4c09564"
+      },
+      "outputs": [
+        {
+          "name": "stderr",
+          "output_type": "stream",
+          "text": [
+            "C:\\Users\\anlur\\AppData\\Local\\Temp\\ipykernel_28648\\3063530973.py:1: SettingWithCopyWarning: \n",
+            "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+            "Try using .loc[row_indexer,col_indexer] = value instead\n",
+            "\n",
+            "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+            "  df_2025['Consumo'] = (\n",
+            "C:\\Users\\anlur\\AppData\\Local\\Temp\\ipykernel_28648\\3063530973.py:8: SettingWithCopyWarning: \n",
+            "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+            "Try using .loc[row_indexer,col_indexer] = value instead\n",
+            "\n",
+            "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+            "  df_2025['Consumidores'] = (\n"
+          ]
+        }
+      ],
+      "source": [
+        "df_2025['Consumo'] = (\n",
+        "    df_2025['Consumo']\n",
+        "    .str.replace('.', '', regex=False)\n",
+        "    .str.replace(',', '.', regex=False)\n",
+        "    .astype(float)\n",
+        ")\n",
+        "\n",
+        "df_2025['Consumidores'] = (\n",
+        "    df_2025['Consumidores']\n",
+        "    .astype(str)\n",
+        "    .str.replace('.', '', regex=False)\n",
+        "    .astype(float)\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 25,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "PW5ToPrOeazP",
+        "outputId": "9c1ad4d2-ad0e-4a84-c7ce-fa65c59fd0a8"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "Index: 3328 entries, 0 to 3327\n",
+            "Data columns (total 12 columns):\n",
+            " #   Column          Non-Null Count  Dtype         \n",
+            "---  ------          --------------  -----         \n",
+            " 0   Data            3328 non-null   int64         \n",
+            " 1   DataExcel       3328 non-null   datetime64[ns]\n",
+            " 2   UF              3328 non-null   object        \n",
+            " 3   Regiao          3328 non-null   object        \n",
+            " 4   Sistema         3328 non-null   object        \n",
+            " 5   Classe          3328 non-null   object        \n",
+            " 6   TipoConsumidor  3328 non-null   object        \n",
+            " 7   Consumo         3328 non-null   float64       \n",
+            " 8   Consumidores    3328 non-null   float64       \n",
+            " 9   DataVersao      3328 non-null   object        \n",
+            " 10  year            3328 non-null   int32         \n",
+            " 11  month           3328 non-null   int32         \n",
+            "dtypes: datetime64[ns](1), float64(2), int32(2), int64(1), object(6)\n",
+            "memory usage: 312.0+ KB\n"
+          ]
+        }
+      ],
+      "source": [
+        "df_2025.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 26,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "pD6j4XBZet2w",
+        "outputId": "4054c9a4-9e47-4058-ec61-a1f58c342075"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Data</th>\n",
+              "      <th>DataExcel</th>\n",
+              "      <th>UF</th>\n",
+              "      <th>Regiao</th>\n",
+              "      <th>Sistema</th>\n",
+              "      <th>Classe</th>\n",
+              "      <th>TipoConsumidor</th>\n",
+              "      <th>Consumo</th>\n",
+              "      <th>Consumidores</th>\n",
+              "      <th>DataVersao</th>\n",
+              "      <th>year</th>\n",
+              "      <th>month</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>2025-12-01</td>\n",
+              "      <td>AC</td>\n",
+              "      <td>Norte</td>\n",
+              "      <td>SISTEMAS ISOLADOS</td>\n",
+              "      <td>Comercial</td>\n",
+              "      <td>Cativo</td>\n",
+              "      <td>175.7</td>\n",
+              "      <td>478.0</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>2025-12-01</td>\n",
+              "      <td>AC</td>\n",
+              "      <td>Norte</td>\n",
+              "      <td>SISTEMAS ISOLADOS</td>\n",
+              "      <td>Industrial</td>\n",
+              "      <td>Cativo</td>\n",
+              "      <td>7.0</td>\n",
+              "      <td>4.0</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>2025-12-01</td>\n",
+              "      <td>AC</td>\n",
+              "      <td>Norte</td>\n",
+              "      <td>SISTEMAS ISOLADOS</td>\n",
+              "      <td>Outros</td>\n",
+              "      <td>Cativo</td>\n",
+              "      <td>495.1</td>\n",
+              "      <td>382.0</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>2025-12-01</td>\n",
+              "      <td>AC</td>\n",
+              "      <td>Norte</td>\n",
+              "      <td>SISTEMAS ISOLADOS</td>\n",
+              "      <td>Residencial</td>\n",
+              "      <td>Cativo</td>\n",
+              "      <td>1266.8</td>\n",
+              "      <td>8862.0</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>20251201</td>\n",
+              "      <td>2025-12-01</td>\n",
+              "      <td>AC</td>\n",
+              "      <td>Norte</td>\n",
+              "      <td>SISTEMAS ISOLADOS</td>\n",
+              "      <td>Rural</td>\n",
+              "      <td>Cativo</td>\n",
+              "      <td>1181.1</td>\n",
+              "      <td>125.0</td>\n",
+              "      <td>23/02/2026</td>\n",
+              "      <td>2025</td>\n",
+              "      <td>12</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "       Data  DataExcel  UF Regiao            Sistema       Classe  \\\n",
+              "0  20251201 2025-12-01  AC  Norte  SISTEMAS ISOLADOS    Comercial   \n",
+              "1  20251201 2025-12-01  AC  Norte  SISTEMAS ISOLADOS   Industrial   \n",
+              "2  20251201 2025-12-01  AC  Norte  SISTEMAS ISOLADOS       Outros   \n",
+              "3  20251201 2025-12-01  AC  Norte  SISTEMAS ISOLADOS  Residencial   \n",
+              "4  20251201 2025-12-01  AC  Norte  SISTEMAS ISOLADOS        Rural   \n",
+              "\n",
+              "  TipoConsumidor  Consumo  Consumidores  DataVersao  year  month  \n",
+              "0         Cativo    175.7         478.0  23/02/2026  2025     12  \n",
+              "1         Cativo      7.0           4.0  23/02/2026  2025     12  \n",
+              "2         Cativo    495.1         382.0  23/02/2026  2025     12  \n",
+              "3         Cativo   1266.8        8862.0  23/02/2026  2025     12  \n",
+              "4         Cativo   1181.1         125.0  23/02/2026  2025     12  "
+            ]
+          },
+          "execution_count": 26,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_2025.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 27,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "iaIsWdngeSBR",
+        "outputId": "9e26f4e4-1668-4010-fe9f-492a4a26de28"
+      },
+      "outputs": [
+        {
+          "name": "stderr",
+          "output_type": "stream",
+          "text": [
+            "C:\\Users\\anlur\\AppData\\Local\\Temp\\ipykernel_28648\\3578452241.py:1: SettingWithCopyWarning: \n",
+            "A value is trying to be set on a copy of a slice from a DataFrame\n",
+            "\n",
+            "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+            "  df_2025.drop(columns=['Data', 'DataVersao'], inplace=True)\n"
+          ]
+        }
+      ],
+      "source": [
+        "df_2025.drop(columns=['Data', 'DataVersao'], inplace=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 28,
+      "metadata": {
+        "id": "rlW3__1BsbTH"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025 = df_2025.rename(columns={'Consumo':'Consumo_MWh'})"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 29,
+      "metadata": {
+        "id": "3LSspsSPgf6l"
+      },
+      "outputs": [],
+      "source": [
+        "df_simplificado = (\n",
+        "    df_2025\n",
+        "    .groupby('Classe')\n",
+        "    .agg({\n",
+        "        'Consumo_MWh': 'sum',\n",
+        "        'Consumidores': 'sum'\n",
+        "    })\n",
+        ")\n",
+        "\n",
+        "df_simplificado['consumo_medio_MWh'] = df_simplificado['Consumo_MWh'] / df_simplificado['Consumidores']\n",
+        "\n",
+        "df_simplificado = df_simplificado.sort_values('Consumo_MWh', ascending=False)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 30,
+      "metadata": {
+        "id": "8PwG7saqtiFE"
+      },
+      "outputs": [],
+      "source": [
+        "df_simplificado['Consumo_kWh'] = (df_simplificado['Consumo_MWh']) * 1000\n",
+        "df_simplificado['consumo_medio_KWh'] = (df_simplificado['consumo_medio_MWh']) * 1000"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 31,
+      "metadata": {
+        "id": "-YWdnGW-t3qb"
+      },
+      "outputs": [],
+      "source": [
+        "df_simplificado = df_simplificado[[\n",
+        "    'Consumidores',\n",
+        "    'Consumo_MWh',\n",
+        "    'Consumo_kWh',\n",
+        "    'consumo_medio_MWh',\n",
+        "    'consumo_medio_KWh'\n",
+        "]]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 32,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 237
+        },
+        "id": "s-DfzvJ-gl96",
+        "outputId": "5e06b27a-b424-46b9-ea3c-b9cf249f9ee9"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Consumidores</th>\n",
+              "      <th>Consumo_MWh</th>\n",
+              "      <th>Consumo_kWh</th>\n",
+              "      <th>consumo_medio_MWh</th>\n",
+              "      <th>consumo_medio_KWh</th>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Classe</th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>Industrial</th>\n",
+              "      <td>5.408760e+06</td>\n",
+              "      <td>198858357.9</td>\n",
+              "      <td>1.988584e+11</td>\n",
+              "      <td>36.765979</td>\n",
+              "      <td>36765.979245</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Residencial</th>\n",
+              "      <td>1.004322e+09</td>\n",
+              "      <td>179155039.1</td>\n",
+              "      <td>1.791550e+11</td>\n",
+              "      <td>0.178384</td>\n",
+              "      <td>178.384142</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Comercial</th>\n",
+              "      <td>7.399134e+07</td>\n",
+              "      <td>102288641.3</td>\n",
+              "      <td>1.022886e+11</td>\n",
+              "      <td>1.382441</td>\n",
+              "      <td>1382.440719</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Outros</th>\n",
+              "      <td>1.059433e+07</td>\n",
+              "      <td>51581431.9</td>\n",
+              "      <td>5.158143e+10</td>\n",
+              "      <td>4.868779</td>\n",
+              "      <td>4868.778995</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Rural</th>\n",
+              "      <td>4.604696e+07</td>\n",
+              "      <td>30907605.1</td>\n",
+              "      <td>3.090761e+10</td>\n",
+              "      <td>0.671219</td>\n",
+              "      <td>671.219246</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "             Consumidores  Consumo_MWh   Consumo_kWh  consumo_medio_MWh  \\\n",
+              "Classe                                                                    \n",
+              "Industrial   5.408760e+06  198858357.9  1.988584e+11          36.765979   \n",
+              "Residencial  1.004322e+09  179155039.1  1.791550e+11           0.178384   \n",
+              "Comercial    7.399134e+07  102288641.3  1.022886e+11           1.382441   \n",
+              "Outros       1.059433e+07   51581431.9  5.158143e+10           4.868779   \n",
+              "Rural        4.604696e+07   30907605.1  3.090761e+10           0.671219   \n",
+              "\n",
+              "             consumo_medio_KWh  \n",
+              "Classe                          \n",
+              "Industrial        36765.979245  \n",
+              "Residencial         178.384142  \n",
+              "Comercial          1382.440719  \n",
+              "Outros             4868.778995  \n",
+              "Rural               671.219246  "
+            ]
+          },
+          "execution_count": 32,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_simplificado"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 33,
+      "metadata": {
+        "id": "TIB8qQnFgmOk"
+      },
+      "outputs": [],
+      "source": [
+        "df_simplificado.to_csv('../data/processed/consumo_medio_categoria_2025.csv')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "BsBJ01GNx9f4"
+      },
+      "source": [
+        "Verificando a sanidade dos dados"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 34,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "Ru-ZE8HaiX9N",
+        "outputId": "18415352-21ee-4b8c-ee67-5df6205d0bc0"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>SetorIndustrial</th>\n",
+              "      <th>Consumo_MWh</th>\n",
+              "      <th>Consumo_kWh</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>05 - EXTRAÇÃO DE CARVÃO MINERAL</td>\n",
+              "      <td>658.978726</td>\n",
+              "      <td>6.589787e+05</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>06 - EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL</td>\n",
+              "      <td>8514.621995</td>\n",
+              "      <td>8.514622e+06</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>07 - EXTRAÇÃO DE MINERAIS METÁLICOS</td>\n",
+              "      <td>43036.799370</td>\n",
+              "      <td>4.303680e+07</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>08 - EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS</td>\n",
+              "      <td>11104.061692</td>\n",
+              "      <td>1.110406e+07</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>09 - ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS</td>\n",
+              "      <td>739.495885</td>\n",
+              "      <td>7.394959e+05</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "                                   SetorIndustrial   Consumo_MWh   Consumo_kWh\n",
+              "0                  05 - EXTRAÇÃO DE CARVÃO MINERAL    658.978726  6.589787e+05\n",
+              "1          06 - EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL   8514.621995  8.514622e+06\n",
+              "2              07 - EXTRAÇÃO DE MINERAIS METÁLICOS  43036.799370  4.303680e+07\n",
+              "3          08 - EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS  11104.061692  1.110406e+07\n",
+              "4  09 - ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS    739.495885  7.394959e+05"
+            ]
+          },
+          "execution_count": 34,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_grouped.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 35,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "9aYskbc4vPXp",
+        "outputId": "759e3a31-566d-4681-997e-5cf5640029ba"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 37 entries, 0 to 36\n",
+            "Data columns (total 3 columns):\n",
+            " #   Column           Non-Null Count  Dtype  \n",
+            "---  ------           --------------  -----  \n",
+            " 0   SetorIndustrial  37 non-null     object \n",
+            " 1   Consumo_MWh      37 non-null     float64\n",
+            " 2   Consumo_kWh      37 non-null     float64\n",
+            "dtypes: float64(2), object(1)\n",
+            "memory usage: 1020.0+ bytes\n"
+          ]
+        }
+      ],
+      "source": [
+        "df_grouped.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 36,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 237
+        },
+        "id": "7wUWCuhgvSuk",
+        "outputId": "db49e101-deb7-4894-86a6-42cbe50e88c8"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Consumidores</th>\n",
+              "      <th>Consumo_MWh</th>\n",
+              "      <th>Consumo_kWh</th>\n",
+              "      <th>consumo_medio_MWh</th>\n",
+              "      <th>consumo_medio_KWh</th>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Classe</th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>Industrial</th>\n",
+              "      <td>5.408760e+06</td>\n",
+              "      <td>198858357.9</td>\n",
+              "      <td>1.988584e+11</td>\n",
+              "      <td>36.765979</td>\n",
+              "      <td>36765.979245</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Residencial</th>\n",
+              "      <td>1.004322e+09</td>\n",
+              "      <td>179155039.1</td>\n",
+              "      <td>1.791550e+11</td>\n",
+              "      <td>0.178384</td>\n",
+              "      <td>178.384142</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Comercial</th>\n",
+              "      <td>7.399134e+07</td>\n",
+              "      <td>102288641.3</td>\n",
+              "      <td>1.022886e+11</td>\n",
+              "      <td>1.382441</td>\n",
+              "      <td>1382.440719</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Outros</th>\n",
+              "      <td>1.059433e+07</td>\n",
+              "      <td>51581431.9</td>\n",
+              "      <td>5.158143e+10</td>\n",
+              "      <td>4.868779</td>\n",
+              "      <td>4868.778995</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Rural</th>\n",
+              "      <td>4.604696e+07</td>\n",
+              "      <td>30907605.1</td>\n",
+              "      <td>3.090761e+10</td>\n",
+              "      <td>0.671219</td>\n",
+              "      <td>671.219246</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "             Consumidores  Consumo_MWh   Consumo_kWh  consumo_medio_MWh  \\\n",
+              "Classe                                                                    \n",
+              "Industrial   5.408760e+06  198858357.9  1.988584e+11          36.765979   \n",
+              "Residencial  1.004322e+09  179155039.1  1.791550e+11           0.178384   \n",
+              "Comercial    7.399134e+07  102288641.3  1.022886e+11           1.382441   \n",
+              "Outros       1.059433e+07   51581431.9  5.158143e+10           4.868779   \n",
+              "Rural        4.604696e+07   30907605.1  3.090761e+10           0.671219   \n",
+              "\n",
+              "             consumo_medio_KWh  \n",
+              "Classe                          \n",
+              "Industrial        36765.979245  \n",
+              "Residencial         178.384142  \n",
+              "Comercial          1382.440719  \n",
+              "Outros             4868.778995  \n",
+              "Rural               671.219246  "
+            ]
+          },
+          "execution_count": 36,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_simplificado.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 37,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Ib48gS0FvVhU",
+        "outputId": "2a936cdd-f1a0-43f5-ee53-2830a58b05ff"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "Index: 5 entries, Industrial to Rural\n",
+            "Data columns (total 5 columns):\n",
+            " #   Column             Non-Null Count  Dtype  \n",
+            "---  ------             --------------  -----  \n",
+            " 0   Consumidores       5 non-null      float64\n",
+            " 1   Consumo_MWh        5 non-null      float64\n",
+            " 2   Consumo_kWh        5 non-null      float64\n",
+            " 3   consumo_medio_MWh  5 non-null      float64\n",
+            " 4   consumo_medio_KWh  5 non-null      float64\n",
+            "dtypes: float64(5)\n",
+            "memory usage: 240.0+ bytes\n"
+          ]
+        }
+      ],
+      "source": [
+        "df_simplificado.info()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "KucWPPvSzFOD"
+      },
+      "source": [
+        "Criação do consumption_profile.csv"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 38,
+      "metadata": {
+        "id": "sDow0JmAvXt9"
+      },
+      "outputs": [],
+      "source": [
+        "df_profiles = df_simplificado.copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 39,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 237
+        },
+        "id": "CMoz13jDzv11",
+        "outputId": "a8755268-a55a-4897-9862-dc3bc90f0bf7"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Consumidores</th>\n",
+              "      <th>Consumo_MWh</th>\n",
+              "      <th>Consumo_kWh</th>\n",
+              "      <th>consumo_medio_MWh</th>\n",
+              "      <th>consumo_medio_KWh</th>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Classe</th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>Industrial</th>\n",
+              "      <td>5.408760e+06</td>\n",
+              "      <td>198858357.9</td>\n",
+              "      <td>1.988584e+11</td>\n",
+              "      <td>36.765979</td>\n",
+              "      <td>36765.979245</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Residencial</th>\n",
+              "      <td>1.004322e+09</td>\n",
+              "      <td>179155039.1</td>\n",
+              "      <td>1.791550e+11</td>\n",
+              "      <td>0.178384</td>\n",
+              "      <td>178.384142</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Comercial</th>\n",
+              "      <td>7.399134e+07</td>\n",
+              "      <td>102288641.3</td>\n",
+              "      <td>1.022886e+11</td>\n",
+              "      <td>1.382441</td>\n",
+              "      <td>1382.440719</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Outros</th>\n",
+              "      <td>1.059433e+07</td>\n",
+              "      <td>51581431.9</td>\n",
+              "      <td>5.158143e+10</td>\n",
+              "      <td>4.868779</td>\n",
+              "      <td>4868.778995</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Rural</th>\n",
+              "      <td>4.604696e+07</td>\n",
+              "      <td>30907605.1</td>\n",
+              "      <td>3.090761e+10</td>\n",
+              "      <td>0.671219</td>\n",
+              "      <td>671.219246</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "             Consumidores  Consumo_MWh   Consumo_kWh  consumo_medio_MWh  \\\n",
+              "Classe                                                                    \n",
+              "Industrial   5.408760e+06  198858357.9  1.988584e+11          36.765979   \n",
+              "Residencial  1.004322e+09  179155039.1  1.791550e+11           0.178384   \n",
+              "Comercial    7.399134e+07  102288641.3  1.022886e+11           1.382441   \n",
+              "Outros       1.059433e+07   51581431.9  5.158143e+10           4.868779   \n",
+              "Rural        4.604696e+07   30907605.1  3.090761e+10           0.671219   \n",
+              "\n",
+              "             consumo_medio_KWh  \n",
+              "Classe                          \n",
+              "Industrial        36765.979245  \n",
+              "Residencial         178.384142  \n",
+              "Comercial          1382.440719  \n",
+              "Outros             4868.778995  \n",
+              "Rural               671.219246  "
+            ]
+          },
+          "execution_count": 39,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_profiles.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 40,
+      "metadata": {
+        "id": "BkspwB79zugR"
+      },
+      "outputs": [],
+      "source": [
+        "def get_sigma(classe):\n",
+        "    if classe == 'Industrial':\n",
+        "        return 0.6\n",
+        "    elif classe == 'Comercial':\n",
+        "        return 0.4\n",
+        "    elif classe == 'Residencial':\n",
+        "        return 0.3\n",
+        "    else:\n",
+        "        return 0.35\n",
+        "\n",
+        "df_profiles['sigma'] = df_profiles.index.map(get_sigma)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 41,
+      "metadata": {
+        "id": "lnG244jjzfpB"
+      },
+      "outputs": [],
+      "source": [
+        "map_usage = {\n",
+        "    'Industrial': 'industrial',\n",
+        "    'Comercial': 'commercial',\n",
+        "    'Residencial': 'residential',\n",
+        "    'Rural': 'agriculture',\n",
+        "    'Outros': 'other'\n",
+        "}\n",
+        "\n",
+        "df_profiles['usage_type'] = df_profiles.index.map(map_usage)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 42,
+      "metadata": {
+        "id": "a2t8xfSkQ-Ms"
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np\n",
+        "\n",
+        "df_profiles['mu'] = np.log(df_profiles['consumo_medio_KWh'])"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 43,
+      "metadata": {
+        "id": "RkMQRNri0G9T"
+      },
+      "outputs": [],
+      "source": [
+        "df_final = df_profiles.copy()\n",
+        "df_final['fuel_type'] = 'electric'\n",
+        "df_final['distribution_type'] = 'lognormal'\n",
+        "df_final['param_1'] = df_profiles['mu']\n",
+        "df_final['param_2'] = df_profiles['sigma']\n",
+        "df_final['param_1_name'] = 'mu'\n",
+        "df_final['param_2_name'] = 'sigma'\n",
+        "df_final['unit'] = 'kWh'\n",
+        "df_final['is_energy_based'] = True"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 44,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 257
+        },
+        "id": "dMxcmlgm0Kyp",
+        "outputId": "dd2c5206-33a7-4cbc-d082-e5a541bca23c"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Consumidores</th>\n",
+              "      <th>Consumo_MWh</th>\n",
+              "      <th>Consumo_kWh</th>\n",
+              "      <th>consumo_medio_MWh</th>\n",
+              "      <th>consumo_medio_KWh</th>\n",
+              "      <th>sigma</th>\n",
+              "      <th>usage_type</th>\n",
+              "      <th>mu</th>\n",
+              "      <th>fuel_type</th>\n",
+              "      <th>distribution_type</th>\n",
+              "      <th>param_1</th>\n",
+              "      <th>param_2</th>\n",
+              "      <th>param_1_name</th>\n",
+              "      <th>param_2_name</th>\n",
+              "      <th>unit</th>\n",
+              "      <th>is_energy_based</th>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Classe</th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>Industrial</th>\n",
+              "      <td>5.408760e+06</td>\n",
+              "      <td>198858357.9</td>\n",
+              "      <td>1.988584e+11</td>\n",
+              "      <td>36.765979</td>\n",
+              "      <td>36765.979245</td>\n",
+              "      <td>0.60</td>\n",
+              "      <td>industrial</td>\n",
+              "      <td>10.512328</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>10.512328</td>\n",
+              "      <td>0.60</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Residencial</th>\n",
+              "      <td>1.004322e+09</td>\n",
+              "      <td>179155039.1</td>\n",
+              "      <td>1.791550e+11</td>\n",
+              "      <td>0.178384</td>\n",
+              "      <td>178.384142</td>\n",
+              "      <td>0.30</td>\n",
+              "      <td>residential</td>\n",
+              "      <td>5.183939</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>5.183939</td>\n",
+              "      <td>0.30</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Comercial</th>\n",
+              "      <td>7.399134e+07</td>\n",
+              "      <td>102288641.3</td>\n",
+              "      <td>1.022886e+11</td>\n",
+              "      <td>1.382441</td>\n",
+              "      <td>1382.440719</td>\n",
+              "      <td>0.40</td>\n",
+              "      <td>commercial</td>\n",
+              "      <td>7.231606</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>7.231606</td>\n",
+              "      <td>0.40</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Outros</th>\n",
+              "      <td>1.059433e+07</td>\n",
+              "      <td>51581431.9</td>\n",
+              "      <td>5.158143e+10</td>\n",
+              "      <td>4.868779</td>\n",
+              "      <td>4868.778995</td>\n",
+              "      <td>0.35</td>\n",
+              "      <td>other</td>\n",
+              "      <td>8.490598</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>8.490598</td>\n",
+              "      <td>0.35</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Rural</th>\n",
+              "      <td>4.604696e+07</td>\n",
+              "      <td>30907605.1</td>\n",
+              "      <td>3.090761e+10</td>\n",
+              "      <td>0.671219</td>\n",
+              "      <td>671.219246</td>\n",
+              "      <td>0.35</td>\n",
+              "      <td>agriculture</td>\n",
+              "      <td>6.509096</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>6.509096</td>\n",
+              "      <td>0.35</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "             Consumidores  Consumo_MWh   Consumo_kWh  consumo_medio_MWh  \\\n",
+              "Classe                                                                    \n",
+              "Industrial   5.408760e+06  198858357.9  1.988584e+11          36.765979   \n",
+              "Residencial  1.004322e+09  179155039.1  1.791550e+11           0.178384   \n",
+              "Comercial    7.399134e+07  102288641.3  1.022886e+11           1.382441   \n",
+              "Outros       1.059433e+07   51581431.9  5.158143e+10           4.868779   \n",
+              "Rural        4.604696e+07   30907605.1  3.090761e+10           0.671219   \n",
+              "\n",
+              "             consumo_medio_KWh  sigma   usage_type         mu fuel_type  \\\n",
+              "Classe                                                                    \n",
+              "Industrial        36765.979245   0.60   industrial  10.512328  electric   \n",
+              "Residencial         178.384142   0.30  residential   5.183939  electric   \n",
+              "Comercial          1382.440719   0.40   commercial   7.231606  electric   \n",
+              "Outros             4868.778995   0.35        other   8.490598  electric   \n",
+              "Rural               671.219246   0.35  agriculture   6.509096  electric   \n",
+              "\n",
+              "            distribution_type    param_1  param_2 param_1_name param_2_name  \\\n",
+              "Classe                                                                        \n",
+              "Industrial          lognormal  10.512328     0.60           mu        sigma   \n",
+              "Residencial         lognormal   5.183939     0.30           mu        sigma   \n",
+              "Comercial           lognormal   7.231606     0.40           mu        sigma   \n",
+              "Outros              lognormal   8.490598     0.35           mu        sigma   \n",
+              "Rural               lognormal   6.509096     0.35           mu        sigma   \n",
+              "\n",
+              "            unit  is_energy_based  \n",
+              "Classe                             \n",
+              "Industrial   kWh             True  \n",
+              "Residencial  kWh             True  \n",
+              "Comercial    kWh             True  \n",
+              "Outros       kWh             True  \n",
+              "Rural        kWh             True  "
+            ]
+          },
+          "execution_count": 44,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_final.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 45,
+      "metadata": {
+        "id": "ESK1LEv00NUk"
+      },
+      "outputs": [],
+      "source": [
+        "df_export = df_final[[\n",
+        "    'usage_type',\n",
+        "    'fuel_type',\n",
+        "    'distribution_type',\n",
+        "    'param_1',\n",
+        "    'param_2',\n",
+        "    'param_1_name',\n",
+        "    'param_2_name',\n",
+        "    'unit',\n",
+        "    'is_energy_based'\n",
+        "]].copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 46,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 237
+        },
+        "id": "avtS2v_I3_D7",
+        "outputId": "0c873937-8d24-4725-fba6-0ffec02d749a"
+      },
+      "outputs": [
+        {
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>usage_type</th>\n",
+              "      <th>fuel_type</th>\n",
+              "      <th>distribution_type</th>\n",
+              "      <th>param_1</th>\n",
+              "      <th>param_2</th>\n",
+              "      <th>param_1_name</th>\n",
+              "      <th>param_2_name</th>\n",
+              "      <th>unit</th>\n",
+              "      <th>is_energy_based</th>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Classe</th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>Industrial</th>\n",
+              "      <td>industrial</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>10.512328</td>\n",
+              "      <td>0.60</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Residencial</th>\n",
+              "      <td>residential</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>5.183939</td>\n",
+              "      <td>0.30</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Comercial</th>\n",
+              "      <td>commercial</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>7.231606</td>\n",
+              "      <td>0.40</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Outros</th>\n",
+              "      <td>other</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>8.490598</td>\n",
+              "      <td>0.35</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Rural</th>\n",
+              "      <td>agriculture</td>\n",
+              "      <td>electric</td>\n",
+              "      <td>lognormal</td>\n",
+              "      <td>6.509096</td>\n",
+              "      <td>0.35</td>\n",
+              "      <td>mu</td>\n",
+              "      <td>sigma</td>\n",
+              "      <td>kWh</td>\n",
+              "      <td>True</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "              usage_type fuel_type distribution_type    param_1  param_2  \\\n",
+              "Classe                                                                     \n",
+              "Industrial    industrial  electric         lognormal  10.512328     0.60   \n",
+              "Residencial  residential  electric         lognormal   5.183939     0.30   \n",
+              "Comercial     commercial  electric         lognormal   7.231606     0.40   \n",
+              "Outros             other  electric         lognormal   8.490598     0.35   \n",
+              "Rural        agriculture  electric         lognormal   6.509096     0.35   \n",
+              "\n",
+              "            param_1_name param_2_name unit  is_energy_based  \n",
+              "Classe                                                       \n",
+              "Industrial            mu        sigma  kWh             True  \n",
+              "Residencial           mu        sigma  kWh             True  \n",
+              "Comercial             mu        sigma  kWh             True  \n",
+              "Outros                mu        sigma  kWh             True  \n",
+              "Rural                 mu        sigma  kWh             True  "
+            ]
+          },
+          "execution_count": 46,
+          "metadata": {},
+          "output_type": "execute_result"
+        }
+      ],
+      "source": [
+        "df_export.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 47,
+      "metadata": {
+        "id": "SG9P5eK04AcI"
+      },
+      "outputs": [],
+      "source": [
+        "df_export.to_csv('../data/processed/v2_consumption_profiles.csv', index=False)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "ChC4Zpco55I8"
+      },
+      "source": [
+        "transformar config em dados sinteticos reais"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "aQMyCOrK6I2C"
+      },
+      "source": [
+        "carergando profile"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 48,
+      "metadata": {
+        "id": "s17AOiOB4Swc"
+      },
+      "outputs": [
+        {
+          "ename": "FileNotFoundError",
+          "evalue": "[Errno 2] No such file or directory: '/content/v2_consumption_profiles.csv'",
+          "output_type": "error",
+          "traceback": [
+            "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+            "\u001b[31mFileNotFoundError\u001b[39m                         Traceback (most recent call last)",
+            "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[48]\u001b[39m\u001b[32m, line 4\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;28;01mimport\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mpandas\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mas\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mpd\u001b[39;00m\n\u001b[32m      2\u001b[39m \u001b[38;5;28;01mimport\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mnumpy\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mas\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mnp\u001b[39;00m\n\u001b[32m----> \u001b[39m\u001b[32m4\u001b[39m profiles = \u001b[43mpd\u001b[49m\u001b[43m.\u001b[49m\u001b[43mread_csv\u001b[49m\u001b[43m(\u001b[49m\u001b[33;43m'\u001b[39;49m\u001b[33;43m/content/v2_consumption_profiles.csv\u001b[39;49m\u001b[33;43m'\u001b[39;49m\u001b[43m)\u001b[49m\n",
+            "\u001b[36mFile \u001b[39m\u001b[32mc:\\Python313\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py:1026\u001b[39m, in \u001b[36mread_csv\u001b[39m\u001b[34m(filepath_or_buffer, sep, delimiter, header, names, index_col, usecols, dtype, engine, converters, true_values, false_values, skipinitialspace, skiprows, skipfooter, nrows, na_values, keep_default_na, na_filter, verbose, skip_blank_lines, parse_dates, infer_datetime_format, keep_date_col, date_parser, date_format, dayfirst, cache_dates, iterator, chunksize, compression, thousands, decimal, lineterminator, quotechar, quoting, doublequote, escapechar, comment, encoding, encoding_errors, dialect, on_bad_lines, delim_whitespace, low_memory, memory_map, float_precision, storage_options, dtype_backend)\u001b[39m\n\u001b[32m   1013\u001b[39m kwds_defaults = _refine_defaults_read(\n\u001b[32m   1014\u001b[39m     dialect,\n\u001b[32m   1015\u001b[39m     delimiter,\n\u001b[32m   (...)\u001b[39m\u001b[32m   1022\u001b[39m     dtype_backend=dtype_backend,\n\u001b[32m   1023\u001b[39m )\n\u001b[32m   1024\u001b[39m kwds.update(kwds_defaults)\n\u001b[32m-> \u001b[39m\u001b[32m1026\u001b[39m \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[43m_read\u001b[49m\u001b[43m(\u001b[49m\u001b[43mfilepath_or_buffer\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mkwds\u001b[49m\u001b[43m)\u001b[49m\n",
+            "\u001b[36mFile \u001b[39m\u001b[32mc:\\Python313\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py:620\u001b[39m, in \u001b[36m_read\u001b[39m\u001b[34m(filepath_or_buffer, kwds)\u001b[39m\n\u001b[32m    617\u001b[39m _validate_names(kwds.get(\u001b[33m\"\u001b[39m\u001b[33mnames\u001b[39m\u001b[33m\"\u001b[39m, \u001b[38;5;28;01mNone\u001b[39;00m))\n\u001b[32m    619\u001b[39m \u001b[38;5;66;03m# Create the parser.\u001b[39;00m\n\u001b[32m--> \u001b[39m\u001b[32m620\u001b[39m parser = \u001b[43mTextFileReader\u001b[49m\u001b[43m(\u001b[49m\u001b[43mfilepath_or_buffer\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43m*\u001b[49m\u001b[43m*\u001b[49m\u001b[43mkwds\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m    622\u001b[39m \u001b[38;5;28;01mif\u001b[39;00m chunksize \u001b[38;5;129;01mor\u001b[39;00m iterator:\n\u001b[32m    623\u001b[39m     \u001b[38;5;28;01mreturn\u001b[39;00m parser\n",
+            "\u001b[36mFile \u001b[39m\u001b[32mc:\\Python313\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py:1620\u001b[39m, in \u001b[36mTextFileReader.__init__\u001b[39m\u001b[34m(self, f, engine, **kwds)\u001b[39m\n\u001b[32m   1617\u001b[39m     \u001b[38;5;28mself\u001b[39m.options[\u001b[33m\"\u001b[39m\u001b[33mhas_index_names\u001b[39m\u001b[33m\"\u001b[39m] = kwds[\u001b[33m\"\u001b[39m\u001b[33mhas_index_names\u001b[39m\u001b[33m\"\u001b[39m]\n\u001b[32m   1619\u001b[39m \u001b[38;5;28mself\u001b[39m.handles: IOHandles | \u001b[38;5;28;01mNone\u001b[39;00m = \u001b[38;5;28;01mNone\u001b[39;00m\n\u001b[32m-> \u001b[39m\u001b[32m1620\u001b[39m \u001b[38;5;28mself\u001b[39m._engine = \u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43m_make_engine\u001b[49m\u001b[43m(\u001b[49m\u001b[43mf\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43mengine\u001b[49m\u001b[43m)\u001b[49m\n",
+            "\u001b[36mFile \u001b[39m\u001b[32mc:\\Python313\\Lib\\site-packages\\pandas\\io\\parsers\\readers.py:1880\u001b[39m, in \u001b[36mTextFileReader._make_engine\u001b[39m\u001b[34m(self, f, engine)\u001b[39m\n\u001b[32m   1878\u001b[39m     \u001b[38;5;28;01mif\u001b[39;00m \u001b[33m\"\u001b[39m\u001b[33mb\u001b[39m\u001b[33m\"\u001b[39m \u001b[38;5;129;01mnot\u001b[39;00m \u001b[38;5;129;01min\u001b[39;00m mode:\n\u001b[32m   1879\u001b[39m         mode += \u001b[33m\"\u001b[39m\u001b[33mb\u001b[39m\u001b[33m\"\u001b[39m\n\u001b[32m-> \u001b[39m\u001b[32m1880\u001b[39m \u001b[38;5;28mself\u001b[39m.handles = \u001b[43mget_handle\u001b[49m\u001b[43m(\u001b[49m\n\u001b[32m   1881\u001b[39m \u001b[43m    \u001b[49m\u001b[43mf\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1882\u001b[39m \u001b[43m    \u001b[49m\u001b[43mmode\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1883\u001b[39m \u001b[43m    \u001b[49m\u001b[43mencoding\u001b[49m\u001b[43m=\u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43moptions\u001b[49m\u001b[43m.\u001b[49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mencoding\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1884\u001b[39m \u001b[43m    \u001b[49m\u001b[43mcompression\u001b[49m\u001b[43m=\u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43moptions\u001b[49m\u001b[43m.\u001b[49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mcompression\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1885\u001b[39m \u001b[43m    \u001b[49m\u001b[43mmemory_map\u001b[49m\u001b[43m=\u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43moptions\u001b[49m\u001b[43m.\u001b[49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mmemory_map\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mFalse\u001b[39;49;00m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1886\u001b[39m \u001b[43m    \u001b[49m\u001b[43mis_text\u001b[49m\u001b[43m=\u001b[49m\u001b[43mis_text\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1887\u001b[39m \u001b[43m    \u001b[49m\u001b[43merrors\u001b[49m\u001b[43m=\u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43moptions\u001b[49m\u001b[43m.\u001b[49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mencoding_errors\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mstrict\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1888\u001b[39m \u001b[43m    \u001b[49m\u001b[43mstorage_options\u001b[49m\u001b[43m=\u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43moptions\u001b[49m\u001b[43m.\u001b[49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mstorage_options\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m   1889\u001b[39m \u001b[43m\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m   1890\u001b[39m \u001b[38;5;28;01massert\u001b[39;00m \u001b[38;5;28mself\u001b[39m.handles \u001b[38;5;129;01mis\u001b[39;00m \u001b[38;5;129;01mnot\u001b[39;00m \u001b[38;5;28;01mNone\u001b[39;00m\n\u001b[32m   1891\u001b[39m f = \u001b[38;5;28mself\u001b[39m.handles.handle\n",
+            "\u001b[36mFile \u001b[39m\u001b[32mc:\\Python313\\Lib\\site-packages\\pandas\\io\\common.py:873\u001b[39m, in \u001b[36mget_handle\u001b[39m\u001b[34m(path_or_buf, mode, encoding, compression, memory_map, is_text, errors, storage_options)\u001b[39m\n\u001b[32m    868\u001b[39m \u001b[38;5;28;01melif\u001b[39;00m \u001b[38;5;28misinstance\u001b[39m(handle, \u001b[38;5;28mstr\u001b[39m):\n\u001b[32m    869\u001b[39m     \u001b[38;5;66;03m# Check whether the filename is to be opened in binary mode.\u001b[39;00m\n\u001b[32m    870\u001b[39m     \u001b[38;5;66;03m# Binary mode does not support 'encoding' and 'newline'.\u001b[39;00m\n\u001b[32m    871\u001b[39m     \u001b[38;5;28;01mif\u001b[39;00m ioargs.encoding \u001b[38;5;129;01mand\u001b[39;00m \u001b[33m\"\u001b[39m\u001b[33mb\u001b[39m\u001b[33m\"\u001b[39m \u001b[38;5;129;01mnot\u001b[39;00m \u001b[38;5;129;01min\u001b[39;00m ioargs.mode:\n\u001b[32m    872\u001b[39m         \u001b[38;5;66;03m# Encoding\u001b[39;00m\n\u001b[32m--> \u001b[39m\u001b[32m873\u001b[39m         handle = \u001b[38;5;28;43mopen\u001b[39;49m\u001b[43m(\u001b[49m\n\u001b[32m    874\u001b[39m \u001b[43m            \u001b[49m\u001b[43mhandle\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m    875\u001b[39m \u001b[43m            \u001b[49m\u001b[43mioargs\u001b[49m\u001b[43m.\u001b[49m\u001b[43mmode\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m    876\u001b[39m \u001b[43m            \u001b[49m\u001b[43mencoding\u001b[49m\u001b[43m=\u001b[49m\u001b[43mioargs\u001b[49m\u001b[43m.\u001b[49m\u001b[43mencoding\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m    877\u001b[39m \u001b[43m            \u001b[49m\u001b[43merrors\u001b[49m\u001b[43m=\u001b[49m\u001b[43merrors\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m    878\u001b[39m \u001b[43m            \u001b[49m\u001b[43mnewline\u001b[49m\u001b[43m=\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\n\u001b[32m    879\u001b[39m \u001b[43m        \u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m    880\u001b[39m     \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[32m    881\u001b[39m         \u001b[38;5;66;03m# Binary mode\u001b[39;00m\n\u001b[32m    882\u001b[39m         handle = \u001b[38;5;28mopen\u001b[39m(handle, ioargs.mode)\n",
+            "\u001b[31mFileNotFoundError\u001b[39m: [Errno 2] No such file or directory: '/content/v2_consumption_profiles.csv'"
+          ]
+        }
+      ],
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "\n",
+        "profiles = pd.read_csv('../data/processed/v2_consumption_profiles.csv')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "w3ZgmeA76QIn"
+      },
+      "source": [
+        "gerar função"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "eT-Z1Z336RmC"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_consumption(profile_row):\n",
+        "\n",
+        "    if profile_row['distribution_type'] == 'lognormal':\n",
+        "        mu = profile_row['param_1']\n",
+        "        sigma = profile_row['param_2']\n",
+        "\n",
+        "        value = np.random.lognormal(mu, sigma)\n",
+        "\n",
+        "        # LIMITADOR\n",
+        "        max_value = 10 * np.exp(mu)\n",
+        "        value = min(value, max_value)\n",
+        "\n",
+        "        return value\n",
+        "\n",
+        "    else:\n",
+        "        raise ValueError(\"Distribuição não suportada\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "MnpcSDF56as8"
+      },
+      "source": [
+        "gerar evento"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "W9tNoo3_72VI"
+      },
+      "outputs": [],
+      "source": [
+        "usage_probs = {\n",
+        "    'residential': 0.6,\n",
+        "    'commercial': 0.2,\n",
+        "    'industrial': 0.1,\n",
+        "    'agriculture': 0.05,\n",
+        "    'other': 0.05\n",
+        "}"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "4FEuadAa6bYx"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_event(profiles):\n",
+        "\n",
+        "    weights = profiles['usage_type'].map(usage_probs)\n",
+        "\n",
+        "    row = profiles.sample(1, weights=weights).iloc[0]\n",
+        "\n",
+        "    consumption = generate_consumption(row)\n",
+        "\n",
+        "    return {\n",
+        "        'usage_type': row['usage_type'],\n",
+        "        'fuel_type': row['fuel_type'],\n",
+        "        'energy_kwh': consumption\n",
+        "    }"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "r-dZBcMK6ePD"
+      },
+      "source": [
+        "gerar dataset"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "etlEBgUe6f39"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_dataset(n, profiles):\n",
+        "    data = []\n",
+        "\n",
+        "    for _ in range(n):\n",
+        "        event = generate_event(profiles)\n",
+        "        data.append(event)\n",
+        "\n",
+        "    return pd.DataFrame(data)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "PyuK5RKI6khi"
+      },
+      "source": [
+        "test"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "uNVH7vlW6jaL"
+      },
+      "outputs": [],
+      "source": [
+        "df = generate_dataset(10000, profiles)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "tX6Vcb6w82Jo",
+        "outputId": "b9c7dda1-2ba2-4f2d-ef18-75c228fe367e"
+      },
+      "outputs": [],
+      "source": [
+        "df.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "G7jqQvPs7WqZ"
+      },
+      "outputs": [],
+      "source": [
+        "df.to_csv('df_gerado_teste.csv')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 272
+        },
+        "id": "_QwumGZz8y-K",
+        "outputId": "a3b7d8bf-7917-4bd3-bca3-1a4c5ce4842f"
+      },
+      "outputs": [],
+      "source": [
+        "df['usage_type'].value_counts(normalize=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 237
+        },
+        "id": "xIEJYmlr9JnZ",
+        "outputId": "76f54b46-a69e-44f5-8a47-f94ca2f26bac"
+      },
+      "outputs": [],
+      "source": [
+        "df.groupby('usage_type')['energy_kwh'].describe()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "1Dv3Fdxg9Paz",
+        "outputId": "0d08cb9f-c15c-4d3a-b163-b85680a2e7f5"
+      },
+      "outputs": [],
+      "source": [
+        "df['energy_kwh'].max()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Nbz8gWYC9R9J",
+        "outputId": "823a22ac-15d5-4c5c-eee8-0f8274532816"
+      },
+      "outputs": [],
+      "source": [
+        "(df['energy_kwh'] < 0).sum()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 452
+        },
+        "id": "_xwIqJIY9TcJ",
+        "outputId": "28b1537b-a616-40fb-cda2-11809590d8ba"
+      },
+      "outputs": [],
+      "source": [
+        "import matplotlib.pyplot as plt\n",
+        "\n",
+        "df[df['usage_type']=='industrial']['energy_kwh'].hist(bins=50)\n",
+        "plt.title('Industrial')\n",
+        "plt.show()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "e_zfR8VvBW3A"
+      },
+      "source": [
+        "criando o energy _source_distribution.csv"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "McjQ5iJT9XqR"
+      },
+      "outputs": [],
+      "source": [
+        "df_aneel = pd.read_csv('../data/raw/aneel_generation.csv',\n",
+        "                       encoding='latin-1',\n",
+        "                       sep=';',\n",
+        "                       decimal=',')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "fB8CyTJVBtki",
+        "outputId": "c59cebd1-91b1-43ba-8c16-4e144cdd96d4"
+      },
+      "outputs": [],
+      "source": [
+        "df_aneel.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "VibQEdRzBveq",
+        "outputId": "958cdc84-6faf-4c54-c981-1530c4fa0b9b"
+      },
+      "outputs": [],
+      "source": [
+        "df_aneel.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "YJN1iqC7DgCI",
+        "outputId": "1c5d17d0-5579-4ba5-9958-06060a2e54e0"
+      },
+      "outputs": [],
+      "source": [
+        "df_aneel['AnoReferencia'].unique()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "4aYKDMwjDIDL"
+      },
+      "outputs": [],
+      "source": [
+        "df_aneel = df_aneel[df_aneel['AnoReferencia']==2025]"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "6h5aX425CHO5",
+        "outputId": "e7ae76e6-24dc-4709-8802-afaa18239c10"
+      },
+      "outputs": [],
+      "source": [
+        "df_aneel['SigTipoGeracao'].unique()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "d1ipmzZ6CwEa"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped = df_aneel.groupby('SigTipoGeracao')['MdaPotenciaInstaladaKW'].sum()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 272
+        },
+        "id": "DyKZLG2hD5B7",
+        "outputId": "bca89068-da6d-44de-bcb1-ec1835812e0f"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped.head()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "idSViCf7EP58"
+      },
+      "source": [
+        "converter para probabilidade"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "rd8sb_6hD5xp"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist = df_grouped / df_grouped.sum()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "N_U0zRrVEYg9"
+      },
+      "source": [
+        "transformar e dataframe"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "l2tqYTPgEqMm",
+        "outputId": "5860a78a-3dcc-4ae4-e161-c5974af9166c"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "FGceT1PrECP7"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped = df_aneel.groupby('SigTipoGeracao')['MdaPotenciaInstaladaKW'].sum().reset_index()\n",
+        "\n",
+        "df_grouped.columns = ['energy_source', 'total_generation']"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "CLDQqvzAELjE"
+      },
+      "outputs": [],
+      "source": [
+        "df_grouped['probability'] = df_grouped['total_generation'] / df_grouped['total_generation'].sum()\n",
+        "\n",
+        "df_dist = df_grouped[['energy_source', 'probability']]\n",
+        "df_dist = df_dist.copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "ZzQ8LkyiFc8s",
+        "outputId": "17a830e6-56a3-46da-d2c2-495db7dfe67b"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "nlCpzyVpFQ5J",
+        "outputId": "0c8862df-3eae-4782-fba0-51b7472e0909"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist['probability'].sum()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "1xwzJecQFWnp"
+      },
+      "outputs": [],
+      "source": [
+        "map_sources = {\n",
+        "    'UHE': 'hydro',      # Hidrelétrica grande\n",
+        "    'PCH': 'hydro',      # Pequena central hidrelétrica\n",
+        "    'CGH': 'hydro',      # Central geradora hidráulica\n",
+        "\n",
+        "    'EOL': 'wind',       # Eólica\n",
+        "\n",
+        "    'UFV': 'solar',      # Solar fotovoltaica\n",
+        "\n",
+        "    # se aparecer depois:\n",
+        "    'UTE': 'thermal',    # termoelétrica (genérico)\n",
+        "    'UTN': 'nuclear',    # nuclear\n",
+        "}\n",
+        "df_dist['energy_source'] = df_dist['energy_source'].map(map_sources)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "3y2i4oH3HZhw"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist = df_dist.groupby('energy_source')['probability'].sum().reset_index()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "UaDyMGgmGKKJ"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist['probability'] = df_dist['probability'] / df_dist['probability'].sum()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "ryIMZ42wGKxj"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist = df_dist.sort_values('probability', ascending=False)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "ODkX373DGMlR",
+        "outputId": "9ca8242f-90ea-4d60-c90a-651c5100acc8"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "vvR8ZFetIc_q"
+      },
+      "outputs": [],
+      "source": [
+        "df_dist.to_csv('../data/processed/v2_energy_source_distribution.csv')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "-Y0MZcS-MmKA"
+      },
+      "source": [
+        "Inserir a emissão co2"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "JETnXjyLKZnF"
+      },
+      "outputs": [],
+      "source": [
+        "emission_factors = pd.read_csv('../data/processed/v2_energy_source_emission_factors.csv')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "67RQqbeQM0Nr"
+      },
+      "outputs": [],
+      "source": [
+        "def calculate_emission(energy_kwh, energy_source, emission_df):\n",
+        "\n",
+        "    row = emission_df.loc[\n",
+        "        emission_df['energy_source'] == energy_source\n",
+        "    ]\n",
+        "\n",
+        "    if row.empty:\n",
+        "        raise ValueError(f\"Fonte não encontrada: {energy_source}\")\n",
+        "\n",
+        "    factor = row['emission_factor'].values[0]\n",
+        "\n",
+        "    return energy_kwh * factor"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "J5FFcnbdOXNY"
+      },
+      "outputs": [],
+      "source": [
+        "def sample_energy_source(dist_df):\n",
+        "    return dist_df.sample(1, weights=dist_df['probability']).iloc[0]['energy_source']"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "aZ66TpYsBBNk"
+      },
+      "outputs": [],
+      "source": [
+        "def normalize_usage_types(series):\n",
+        "\n",
+        "    mapping = {\n",
+        "        'residencial': 'residential',\n",
+        "        'rural': 'agriculture',\n",
+        "        'outros': 'other',\n",
+        "        'industrial': 'industrial',\n",
+        "        'commercial': 'commercial'\n",
+        "    }\n",
+        "\n",
+        "    return (\n",
+        "        series\n",
+        "        .str.strip()\n",
+        "        .str.lower()\n",
+        "        .replace(mapping)\n",
+        "    )"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "LeIADNVSM3QR"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_event(profiles, energy_dist, emission_df):\n",
+        "\n",
+        "    usage_types = normalize_usage_types(profiles['usage_type'])\n",
+        "\n",
+        "    weights = usage_types.map(usage_probs)\n",
+        "\n",
+        "    if weights.sum() == 0:\n",
+        "        raise ValueError(\"usage_probs não corresponde aos usage_type do profile\")\n",
+        "\n",
+        "    row = profiles.sample(1, weights=weights).iloc[0]\n",
+        "\n",
+        "    consumption = generate_consumption(row)\n",
+        "\n",
+        "    energy_source = sample_energy_source(energy_dist)\n",
+        "\n",
+        "    co2 = calculate_emission(consumption, energy_source, emission_df)\n",
+        "\n",
+        "    return {\n",
+        "        'usage_type': row['usage_type'],\n",
+        "        'fuel_type': row['fuel_type'],\n",
+        "        'energy_kwh': consumption,\n",
+        "        'energy_source': energy_source,\n",
+        "        'co2_emission': co2\n",
+        "    }"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "8H99w1VePAyw"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "profiles = pd.read_csv('../data/processed/v2_consumption_profiles.csv')\n",
+        "\n",
+        "energy_dist = pd.read_csv('../data/processed/v2_energy _source_distribution.csv')\n",
+        "\n",
+        "emission_df = pd.read_csv('../data/processed/v2_energy_source_emission_factors.csv')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "JCMwMrV0OXyk",
+        "outputId": "860f3619-e15c-48f1-9145-34cd69578d0d"
+      },
+      "outputs": [],
+      "source": [
+        "event = generate_event(profiles, energy_dist, emission_df)\n",
+        "event"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "YHER1oJ9Sxdi"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_dataset(n, profiles, energy_dist, emission_df):\n",
+        "    data = []\n",
+        "\n",
+        "    for _ in range(n):\n",
+        "        event = generate_event(profiles, energy_dist, emission_df)\n",
+        "        data.append(event)\n",
+        "\n",
+        "    return pd.DataFrame(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 300
+        },
+        "id": "YgmCXzExO7Pu",
+        "outputId": "cb180114-6a11-41b9-d4c7-51b3df7b3b0a"
+      },
+      "outputs": [],
+      "source": [
+        "df = generate_dataset(10000, profiles, energy_dist, emission_df)\n",
+        "df.describe()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "12heAxbVSNdt",
+        "outputId": "4c526446-d596-463c-ec0e-ef8d4158217f"
+      },
+      "outputs": [],
+      "source": [
+        "df.head()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "bW6CJwt5Un6A"
+      },
+      "source": [
+        "Adicionando ID e datas"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "ZGf1rhBVTgpb"
+      },
+      "outputs": [],
+      "source": [
+        "company_id = f\"C{np.random.randint(1000,9999)}\""
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "I1QRdw5XUwPU"
+      },
+      "outputs": [],
+      "source": [
+        "date = pd.Timestamp('2025-01-01') + pd.to_timedelta(np.random.randint(0, 365), unit='D')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "nvisKB4eUy0o"
+      },
+      "outputs": [],
+      "source": [
+        "states = [\n",
+        "'SP','MG','RJ','BA','PR','RS','SC','GO','PE','CE',\n",
+        "'PA','MT','ES','DF','MS','MA','RN','PB','AL','PI',\n",
+        "'RO','SE','TO','AC','AP','RR','AM'\n",
+        "]\n",
+        "\n",
+        "state_weights = [\n",
+        "0.22,0.10,0.09,0.07,0.06,0.06,0.04,0.04,0.04,0.04,\n",
+        "0.03,0.03,0.02,0.02,0.02,0.02,0.015,0.015,0.01,0.01,\n",
+        "0.008,0.008,0.006,0.005,0.005,0.003,0.02\n",
+        "]\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "R5Wx17XdYJkw",
+        "outputId": "c7314077-5032-4013-f8d6-890d9e5205dd"
+      },
+      "outputs": [],
+      "source": [
+        "len(states), len(state_weights)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "fBw82aMlYc5Y",
+        "outputId": "4e253a10-bb8d-49fc-9d0d-4f9e5c46b8f4"
+      },
+      "outputs": [],
+      "source": [
+        "state_weights = np.array(state_weights)\n",
+        "state_weights = state_weights / state_weights.sum()\n",
+        "state_weights"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "ed8qHRAsU5E8"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_event(profiles, energy_dist, emission_df):\n",
+        "\n",
+        "    usage_types = normalize_usage_types(profiles['usage_type'])\n",
+        "\n",
+        "    weights = usage_types.map(usage_probs)\n",
+        "\n",
+        "    if weights.sum() == 0:\n",
+        "        raise ValueError(\"usage_probs não corresponde aos usage_type do profile\")\n",
+        "\n",
+        "    row = profiles.sample(1, weights=weights).iloc[0]\n",
+        "\n",
+        "    consumption = generate_consumption(row)\n",
+        "\n",
+        "    energy_source = sample_energy_source(energy_dist)\n",
+        "\n",
+        "    co2 = calculate_emission(consumption, energy_source, emission_df)\n",
+        "\n",
+        "    return {\n",
+        "        'company_id': f\"C{np.random.randint(100000,999999)}\",\n",
+        "        'date': pd.Timestamp('2025-01-01') + pd.to_timedelta(np.random.randint(0,365), unit='D'),\n",
+        "        'state': np.random.choice(states, p=state_weights),\n",
+        "        'usage_type': row['usage_type'],\n",
+        "        'fuel_type': row['fuel_type'],\n",
+        "        'energy_kwh': consumption,\n",
+        "        'energy_source': energy_source,\n",
+        "        'co2_emission': co2\n",
+        "    }"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "r0JGieg2W0f2"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_dataset(n, profiles, energy_dist, emission_df):\n",
+        "    data = []\n",
+        "\n",
+        "    for _ in range(n):\n",
+        "        event = generate_event(profiles, energy_dist, emission_df)\n",
+        "        data.append(event)\n",
+        "\n",
+        "    return pd.DataFrame(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 300
+        },
+        "id": "ZzF8lVAWVyL8",
+        "outputId": "586ab8a1-7330-4fa5-9e56-a2d4a1b381d7"
+      },
+      "outputs": [],
+      "source": [
+        "df = generate_dataset(10000, profiles, energy_dist, emission_df)\n",
+        "df.describe()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 423
+        },
+        "id": "LJbR9BaoY68S",
+        "outputId": "cc58b29b-5370-4ec6-b972-059b792546d8"
+      },
+      "outputs": [],
+      "source": [
+        "df"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "yLZBHntrb9SG"
+      },
+      "source": [
+        "Adicionando regras mais realistas, do jeito que esta esta pode criar industria pesadas na msm probabilidade entre ACRE e São Paulo"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "evRVbUW7Y7Os"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe = pd.read_csv('../data/raw/EPE - Dados_abertos_Consumo_Mensal.CSV',\n",
+        "                    encoding='latin-1',\n",
+        "                    sep=';',\n",
+        "                    decimal=',')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "g517dTodchtx",
+        "outputId": "baa3981c-1bf8-4739-801c-d75524750e3a"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe.columns"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "Gn8SC4RycoqY",
+        "outputId": "39d8cc52-54b1-4809-9895-6a9cb0d079f3"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe.head(5)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "fR2Hvgz8c5Hg",
+        "outputId": "508cc952-e369-4958-830a-69ea7d975566"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe.info()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "zeewIVuUdEbC"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['Consumo'] = (\n",
+        "    df_epe['Consumo']\n",
+        "    .str.replace('.', '', regex=False)\n",
+        "    .str.replace(',', '.', regex=False)\n",
+        "    .astype(float)\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "IihroZtRcerr"
+      },
+      "outputs": [],
+      "source": [
+        "df_sector_state = (\n",
+        "    df_epe\n",
+        "    .groupby(['UF','Classe'])['Consumo']\n",
+        "    .sum()\n",
+        "    .reset_index()\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 676
+        },
+        "id": "eFGpnCMzc1IU",
+        "outputId": "41547968-dfa6-42a7-a05a-71b5266f420c"
+      },
+      "outputs": [],
+      "source": [
+        "df_sector_state.head(20)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "OPaP3DqEc2Tc"
+      },
+      "outputs": [],
+      "source": [
+        "df_sector_state['probability'] = (\n",
+        "    df_sector_state\n",
+        "    .groupby('UF')['Consumo']\n",
+        "    .transform(lambda x: x / x.sum())\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "XzP0s1Jid4L1"
+      },
+      "outputs": [],
+      "source": [
+        "usage_distribution_by_state = df_sector_state.pivot(\n",
+        "    index='UF',\n",
+        "    columns='Classe',\n",
+        "    values='probability'\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "HlMpknEwd9Ie"
+      },
+      "outputs": [],
+      "source": [
+        "usage_distribution_by_state.to_csv('../data/processed/v2_usage_distribution_by_state.csv')"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "Mes0dTwFjekI"
+      },
+      "source": [
+        "distribuição por estado"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 423
+        },
+        "id": "Kvsx-deXjxNo",
+        "outputId": "2a9d427a-ff1e-4d2d-a61e-c0aef6240325"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "9KmeZIpij__a"
+      },
+      "outputs": [],
+      "source": [
+        "state_consumption = df_epe.groupby(\"UF\")[\"Consumo\"].sum()\n",
+        "\n",
+        "state_distribution = state_consumption / state_consumption.sum()\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 961
+        },
+        "id": "--HpTC-pkPXI",
+        "outputId": "cfd90f1c-0d05-4efa-d41b-dd9eb1e34e3c"
+      },
+      "outputs": [],
+      "source": [
+        "state_distribution"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "GQwXI5pjkI57"
+      },
+      "outputs": [],
+      "source": [
+        "state_distribution.to_csv(\"../data/processed/v2_state_distribution.csv\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "E2Hwgv5wfgLN"
+      },
+      "outputs": [],
+      "source": [
+        "df_state = pd.read_csv(\"../data/processed/v2_state_distribution.csv\")\n",
+        "\n",
+        "states = df_state[\"UF\"]\n",
+        "state_weights = df_state[\"Consumo\"]\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "U2LRy99ZesBr"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_event(profiles, energy_dist, emission_df):\n",
+        "\n",
+        "    # sorteia estado\n",
+        "    state = np.random.choice(states, p=state_weights)\n",
+        "\n",
+        "    # pega probabilidades de setor para esse estado\n",
+        "    usage_probs_state = usage_distribution_by_state.loc[state].values\n",
+        "    usage_probs_state = usage_probs_state / usage_probs_state.sum()\n",
+        "\n",
+        "    # sorteia setor\n",
+        "    usage_types = profiles['usage_type'].unique()\n",
+        "\n",
+        "    usage_type = np.random.choice(\n",
+        "        usage_types,\n",
+        "        p=usage_probs_state\n",
+        "    )\n",
+        "\n",
+        "    # filtra profiles para esse setor\n",
+        "    profiles_subset = profiles[profiles['usage_type'] == usage_type]\n",
+        "\n",
+        "    # escolhe linha de profile\n",
+        "    row = profiles_subset.sample(1).iloc[0]\n",
+        "\n",
+        "    # gera consumo\n",
+        "    consumption = generate_consumption(row)\n",
+        "\n",
+        "    # sorteia fonte de energia\n",
+        "    energy_source = sample_energy_source(energy_dist)\n",
+        "\n",
+        "    # calcula CO2\n",
+        "    co2 = calculate_emission(consumption, energy_source, emission_df)\n",
+        "\n",
+        "    return {\n",
+        "        'company_id': f\"C{np.random.randint(100000,999999)}\",\n",
+        "        'date': pd.Timestamp('2025-01-01') + pd.to_timedelta(np.random.randint(0,365), unit='D'),\n",
+        "        'state': np.random.choice(states, p=state_weights),\n",
+        "        'usage_type': usage_type,\n",
+        "        'fuel_type': row['fuel_type'],\n",
+        "        'energy_kwh': consumption,\n",
+        "        'energy_source': energy_source,\n",
+        "        'co2_emission': co2\n",
+        "    }"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "-9WDz5fNesBs"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_dataset(n, profiles, energy_dist, emission_df):\n",
+        "    data = []\n",
+        "\n",
+        "    for _ in range(n):\n",
+        "        event = generate_event(profiles, energy_dist, emission_df)\n",
+        "        data.append(event)\n",
+        "\n",
+        "    return pd.DataFrame(data)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 300
+        },
+        "id": "7bbirligflxZ",
+        "outputId": "a5059c14-e809-43ad-8c15-38cb3ad5a686"
+      },
+      "outputs": [],
+      "source": [
+        "df = generate_dataset(10000, profiles, energy_dist, emission_df)\n",
+        "df.describe()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 423
+        },
+        "id": "sQQ0J5Xufm3B",
+        "outputId": "8523dbba-59be-4408-d5bd-fd1fa33f2792"
+      },
+      "outputs": [],
+      "source": [
+        "df"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "Pp0vyaKFhrWj"
+      },
+      "outputs": [],
+      "source": [
+        "df = generate_dataset(10000, profiles, energy_dist, emission_df)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "aLkDnO53i0eA",
+        "outputId": "dab6c63b-e90b-4235-a870-e89775ac88b0"
+      },
+      "outputs": [],
+      "source": [
+        "df.info()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "aTcLqaVkEnkF"
+      },
+      "source": [
+        "Extraindo a probabilidade do tramanho do negocio small, medium e large. Para criar dataset mais realista !"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "0Q2glWGPRNi8"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe = pd.read_csv('../data/raw/EPE - Dados_abertos_Consumo_Mensal.CSV',\n",
+        "                    encoding='latin-1',\n",
+        "                    sep=';',\n",
+        "                    decimal=',')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "IayPhStiU0Jn"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['Consumo'] = (\n",
+        "    df_epe['Consumo']\n",
+        "    .str.replace('.', '', regex=False)\n",
+        "    .str.replace(',', '.', regex=False)\n",
+        "    .astype(float)\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "lplUnwBATDNZ"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['DataExcel'] = pd.to_datetime(df_epe['DataExcel'], dayfirst=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "NxJafxPcTMiS"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['year'] = df_epe['DataExcel'].dt.year\n",
+        "df_epe['month'] = df_epe['DataExcel'].dt.month"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "gNclalcVTMiS"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025 = df_epe[df_epe['year'] == 2025].copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 423
+        },
+        "id": "t-Q5u3dJTVJW",
+        "outputId": "55e98cb9-a8cc-46ef-ff88-0c5dad771698"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "e1G7TBs6WzGK",
+        "outputId": "1f5765b6-28bf-484b-ff3d-be000b80b7a9"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025['DataExcel'].unique()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "YldcBw7_TfaA",
+        "outputId": "a881b791-4f83-48ee-a9a8-1760de0727bb"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025['year'].unique()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "haZ7tjQmTWtm"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe = df_2025.copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "dOO7gpCBTqp4"
+      },
+      "outputs": [],
+      "source": [
+        "def classify_company_size(row):\n",
+        "\n",
+        "    usage = row['Classe']\n",
+        "    energy = row['Consumo']\n",
+        "\n",
+        "    if usage == 'Industrial':\n",
+        "        if energy < 20000:\n",
+        "            return 'small'\n",
+        "        elif energy < 100000:\n",
+        "            return 'medium'\n",
+        "        else:\n",
+        "            return 'large'\n",
+        "\n",
+        "    if usage == 'Comercial':\n",
+        "        if energy < 5000:\n",
+        "            return 'small'\n",
+        "        elif energy < 30000:\n",
+        "            return 'medium'\n",
+        "        else:\n",
+        "            return 'large'\n",
+        "\n",
+        "    if usage == 'Residencial':\n",
+        "        return 'small'\n",
+        "\n",
+        "    if usage == 'Rural':\n",
+        "        if energy < 10000:\n",
+        "            return 'small'\n",
+        "        elif energy < 50000:\n",
+        "            return 'medium'\n",
+        "        else:\n",
+        "            return 'large'\n",
+        "\n",
+        "    if usage == 'Outros':\n",
+        "        if energy < 10000:\n",
+        "            return 'small'\n",
+        "        elif energy < 50000:\n",
+        "            return 'medium'\n",
+        "        else:\n",
+        "            return 'large'"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "OM1BbvK9UmGX"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['company_size'] = df_epe.apply(classify_company_size, axis=1)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 209
+        },
+        "id": "-8KK4Gt-UoGM",
+        "outputId": "214ec85f-351e-4462-cb4c-415dcf583272"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['company_size'].value_counts()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "W0VuqmvjU_U-"
+      },
+      "outputs": [],
+      "source": [
+        "size_dist = (\n",
+        "    df_epe\n",
+        "    .groupby('Classe')['company_size']\n",
+        "    .value_counts(normalize=True)\n",
+        "    .reset_index(name='probability')\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 456
+        },
+        "id": "Ps_4aKLQVJIV",
+        "outputId": "ba332d7b-7d5e-4fc7-fd01-74cc957910e6"
+      },
+      "outputs": [],
+      "source": [
+        "size_dist"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "NAQc6Bi6VKuf"
+      },
+      "outputs": [],
+      "source": [
+        "size_dist.to_csv(\n",
+        "    'v2_company_size_distribution_by_usage.csv',\n",
+        "    index=False\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "tg7FwV5GelmD"
+      },
+      "source": [
+        "calculando a variancia por mes, meses podem impactar no consumo de energia !"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "X3oJ_gMte5ga"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe = pd.read_csv('../data/raw/EPE - Dados_abertos_Consumo_Mensal.CSV',\n",
+        "                    encoding='latin-1',\n",
+        "                    sep=';',\n",
+        "                    decimal=',')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "TWhQYDTEe5ga"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['Consumo'] = (\n",
+        "    df_epe['Consumo']\n",
+        "    .str.replace('.', '', regex=False)\n",
+        "    .str.replace(',', '.', regex=False)\n",
+        "    .astype(float)\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "a7tyfmCBe5gb"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['DataExcel'] = pd.to_datetime(df_epe['DataExcel'], dayfirst=True)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "zpyKtS7De5gb"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['year'] = df_epe['DataExcel'].dt.year\n",
+        "df_epe['month'] = df_epe['DataExcel'].dt.month"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "hNEUkRPie5gb"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025 = df_epe[df_epe['year'] == 2025].copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 423
+        },
+        "id": "tFVu_NVVe7fE",
+        "outputId": "25b48614-2ec9-4761-a59e-fe0a525b1e39"
+      },
+      "outputs": [],
+      "source": [
+        "df_2025"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "R9f3Nqupe8pd"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe = df_2025.copy()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "PB2iMOARfNNO"
+      },
+      "outputs": [],
+      "source": [
+        "df_epe['month'] = df_epe['DataExcel'].dt.month"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "lTDH1wOOfZfY"
+      },
+      "outputs": [],
+      "source": [
+        "monthly_stats = (\n",
+        "    df_epe\n",
+        "    .groupby(['UF','Classe','month'])['Consumo']\n",
+        "    .agg(['mean','var'])\n",
+        "    .reset_index()\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "V6eCXMZUgQwo"
+      },
+      "outputs": [],
+      "source": [
+        "annual_mean = (\n",
+        "    df_epe\n",
+        "    .groupby(['UF','Classe'])['Consumo']\n",
+        "    .mean()\n",
+        "    .reset_index()\n",
+        "    .rename(columns={'Consumo':'annual_mean'})\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "rbV6wwIkgVc7"
+      },
+      "outputs": [],
+      "source": [
+        "monthly_stats = monthly_stats.merge(\n",
+        "    annual_mean,\n",
+        "    on=['UF','Classe']\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "1ySBla40gYIm"
+      },
+      "outputs": [],
+      "source": [
+        "monthly_stats['seasonal_factor'] = (\n",
+        "    monthly_stats['mean'] /\n",
+        "    monthly_stats['annual_mean']\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 423
+        },
+        "id": "Y1-h7Qr2gbZi",
+        "outputId": "8a5dc4a6-cf37-45d5-d2ba-72f5ea2d64cc"
+      },
+      "outputs": [],
+      "source": [
+        "monthly_stats"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "S8Q8a-0Fgd_p"
+      },
+      "outputs": [],
+      "source": [
+        "monthly_stats = monthly_stats[[\n",
+        "    'UF',\n",
+        "    'Classe',\n",
+        "    'month',\n",
+        "    'seasonal_factor',\n",
+        "    'var'\n",
+        "]]\n",
+        "\n",
+        "monthly_stats.to_csv(\n",
+        "    'v2_seasonality_state_class_month.csv',\n",
+        "    index=False\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "RZR7cBJKPyD4"
+      },
+      "source": [
+        "Gerando df completo"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "8t50agW1jbQr",
+        "outputId": "25adfbab-fb84-404d-f179-11f9d6ea7ad4"
+      },
+      "outputs": [],
+      "source": [
+        "# !ls"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "hdNVmiCsTYsm"
+      },
+      "outputs": [],
+      "source": [
+        "from pathlib import Path\n",
+        "\n",
+        "ROOT = Path().resolve().parent"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "z6W18ZwvSO2W",
+        "outputId": "eb46e2b4-0d02-4cf7-85c0-72506a0e2bba"
+      },
+      "outputs": [],
+      "source": [
+        "# !pwd"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "vyx97kU7S09d",
+        "outputId": "f774625f-4b85-4247-b8ae-6114b0d951fc"
+      },
+      "outputs": [],
+      "source": [
+        "# !git pull"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "lgMsAkwVUu9B"
+      },
+      "source": [
+        "import csvs"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "Uavpc7NRSgoe"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "\n",
+        "profiles = pd.read_csv('../data/processed/v2_consumption_profiles.csv')\n",
+        "\n",
+        "energy_dist = pd.read_csv('../data/processed/v2_energy _source_distribution.csv')\n",
+        "\n",
+        "emission_df = pd.read_csv('../data/processed/v2_energy_source_emission_factors.csv')\n",
+        "\n",
+        "usage_distribution_by_state = pd.read_csv(\n",
+        "    '../data/processed/v2_usage_distribution_by_state.csv',\n",
+        "    index_col=0\n",
+        ")\n",
+        "\n",
+        "company_size_dist = pd.read_csv(\n",
+        "    '../data/processed/v2_company_size_distribution_by_usage.csv'\n",
+        ")\n",
+        "\n",
+        "seasonality = pd.read_csv(\n",
+        "    '../data/processed/v2_seasonality_state_class_month.csv'\n",
+        ")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "oBTfrRUyidvq"
+      },
+      "source": [
+        "Sanity para integrar todos as tabelas estava dando MUITOS erros !"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "Ixd5aQStdNlo"
+      },
+      "outputs": [],
+      "source": [
+        "profiles['usage_type'] = profiles['usage_type'].str.lower()\n",
+        "\n",
+        "usage_distribution_by_state.columns = usage_distribution_by_state.columns.str.lower()\n",
+        "\n",
+        "company_size_dist['Classe'] = company_size_dist['Classe'].str.lower()\n",
+        "\n",
+        "seasonality['Classe'] = seasonality['Classe'].str.lower()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7u21kuOqcVs_",
+        "outputId": "627a6b35-d5a1-4333-d36d-8b8d48ca9faf"
+      },
+      "outputs": [],
+      "source": [
+        "print('profiles: '+profiles.columns,'\\n')\n",
+        "print('energy_dist: '+energy_dist.columns,'\\n')\n",
+        "print('emission_df: '+emission_df.columns,'\\n')\n",
+        "print('usage_distribution_by_state: '+usage_distribution_by_state.columns,'\\n')\n",
+        "print('company_size_dist: '+company_size_dist.columns,'\\n')\n",
+        "print('seasonality: '+seasonality.columns,'\\n')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "yDB51hp1dxJv"
+      },
+      "outputs": [],
+      "source": [
+        "def show_uniques(df, name):\n",
+        "    print(f\"\\n{name}\")\n",
+        "    for col in df.select_dtypes(include='object').columns:\n",
+        "        print(col, \"->\", df[col].unique())"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "txLeVYb8dzrU",
+        "outputId": "d7009411-58f2-41be-c92b-db7538a12223"
+      },
+      "outputs": [],
+      "source": [
+        "show_uniques(profiles, \"profiles\")\n",
+        "show_uniques(company_size_dist, \"company_size_dist\")\n",
+        "show_uniques(usage_distribution_by_state, \"usage_distribution\")\n",
+        "show_uniques(seasonality, \"seasonality\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "KLflF4c2gYvy",
+        "outputId": "aef624f0-6548-4732-e912-94f8fc52dfd4"
+      },
+      "outputs": [],
+      "source": [
+        "print(set(profiles['usage_type']))\n",
+        "print(set(company_size_dist['Classe']))\n",
+        "print(set(usage_distribution_by_state.columns))\n",
+        "print(set(seasonality['Classe']))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "LAgldpDWhVm9",
+        "outputId": "d4031edb-4d89-4336-9b8c-29e09ae588c6"
+      },
+      "outputs": [],
+      "source": [
+        "print(\"usage_types possíveis:\", usage_distribution_by_state.columns.tolist())\n",
+        "print(\"classes em company_size:\", company_size_dist['Classe'].unique())"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "1pQlwBT3hZv3",
+        "outputId": "56b9d05a-a6b8-459f-f84a-e26af16f97de"
+      },
+      "outputs": [],
+      "source": [
+        "for u in usage_distribution_by_state.columns:\n",
+        "    subset = company_size_dist[company_size_dist['Classe'] == u]\n",
+        "    print(u, \"->\", len(subset))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ip6J8GX1Yu9R",
+        "outputId": "f7e5ec7b-d68f-4ab5-8b0d-d200571a7174"
+      },
+      "outputs": [],
+      "source": [
+        "print(energy_dist['probability'].sum())"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "uycp9HFaY1Zn",
+        "outputId": "3e5092e8-0fc2-48a0-b206-f4272cae1f0d"
+      },
+      "outputs": [],
+      "source": [
+        "print(company_size_dist.groupby('Classe')['probability'].sum())"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "sVxb85U8Uy-q"
+      },
+      "source": [
+        "função geração consumo"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "YVau1sfFSoP6"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_consumption(profile_row):\n",
+        "\n",
+        "    if profile_row['distribution_type'] == 'lognormal':\n",
+        "\n",
+        "        mu = profile_row['param_1']\n",
+        "        sigma = profile_row['param_2']\n",
+        "\n",
+        "        value = np.random.lognormal(mu, sigma)\n",
+        "\n",
+        "        max_value = 10 * np.exp(mu)\n",
+        "        value = min(value, max_value)\n",
+        "\n",
+        "        return value\n",
+        "\n",
+        "    else:\n",
+        "        raise ValueError(\"Distribuição não suportada\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "RmBbl1hFU5l9"
+      },
+      "source": [
+        "fonte energetica"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "T2EWZZx8U1lP"
+      },
+      "outputs": [],
+      "source": [
+        "def sample_energy_source(dist_df):\n",
+        "\n",
+        "    return dist_df.sample(\n",
+        "        1,\n",
+        "        weights=dist_df['probability']\n",
+        "    ).iloc[0]['energy_source']"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "ciI7PJ93VAtB"
+      },
+      "source": [
+        "calcular emissão"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "7KihTRJgU8le"
+      },
+      "outputs": [],
+      "source": [
+        "def calculate_emission(energy_kwh, energy_source, emission_df):\n",
+        "\n",
+        "    row = emission_df.loc[\n",
+        "        emission_df['energy_source'] == energy_source\n",
+        "    ]\n",
+        "\n",
+        "    factor = row['emission_factor'].values[0]\n",
+        "\n",
+        "    return energy_kwh * factor"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "iI8nC5F3VFBy"
+      },
+      "source": [
+        "amostra tamanho da empresa"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "-B18U24GVCHv"
+      },
+      "outputs": [],
+      "source": [
+        "def sample_company_size(usage_type):\n",
+        "\n",
+        "    subset = company_size_dist[company_size_dist['Classe'] == usage_type]\n",
+        "\n",
+        "    if len(subset) == 1:\n",
+        "        return subset['company_size'].iloc[0]\n",
+        "\n",
+        "    return np.random.choice(\n",
+        "        subset['company_size'],\n",
+        "        p=subset['probability']\n",
+        "    )"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "k7tHlQPTVJCL"
+      },
+      "source": [
+        "aplicar sazionalidade"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "G5nwFuoIVGtr"
+      },
+      "outputs": [],
+      "source": [
+        "def apply_seasonality(consumption, state, usage_class, month):\n",
+        "\n",
+        "    subset = seasonality[\n",
+        "        (seasonality['UF'] == state) &\n",
+        "        (seasonality['Classe'] == usage_class.capitalize()) &\n",
+        "        (seasonality['month'] == month)\n",
+        "    ]\n",
+        "\n",
+        "    if subset.empty:\n",
+        "        return consumption\n",
+        "\n",
+        "    factor = subset['seasonal_factor'].values[0]\n",
+        "\n",
+        "    return consumption * factor"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "8BDAYlppVOJa"
+      },
+      "source": [
+        "gerar evento (juntar tudo)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "iDBrZiUBVKen"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_event(profiles):\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 1) Escolha do estado\n",
+        "    # -------------------------------------------------\n",
+        "    state = np.random.choice(states, p=state_weights)\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 2) Sorteio do mês\n",
+        "    # -------------------------------------------------\n",
+        "    month = np.random.randint(1, 13)\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 3) Setor econômico condicionado ao estado\n",
+        "    # -------------------------------------------------\n",
+        "    usage_probs_state = usage_distribution_by_state.loc[state].values\n",
+        "    usage_probs_state = usage_probs_state / usage_probs_state.sum()\n",
+        "\n",
+        "    usage_types = usage_distribution_by_state.columns\n",
+        "\n",
+        "    usage_type = np.random.choice(\n",
+        "        usage_types,\n",
+        "        p=usage_probs_state\n",
+        "    )\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 4) Perfil do setor\n",
+        "    # -------------------------------------------------\n",
+        "    profiles_subset = profiles[profiles['usage_type'] == usage_type]\n",
+        "\n",
+        "    if profiles_subset.empty:\n",
+        "        raise ValueError(f\"Nenhum profile encontrado para {usage_type}\")\n",
+        "\n",
+        "    row = profiles_subset.sample(1).iloc[0]\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 5) Consumo base\n",
+        "    # -------------------------------------------------\n",
+        "    consumption = generate_consumption(row)\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 6) Ajuste de sazonalidade\n",
+        "    # -------------------------------------------------\n",
+        "    consumption = apply_seasonality(\n",
+        "        consumption,\n",
+        "        state,\n",
+        "        usage_type,\n",
+        "        month\n",
+        "    )\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 7) RUÍDO REALISTA DE CONSUMO\n",
+        "    # -------------------------------------------------\n",
+        "    # Mesmo equipamentos idênticos nunca operam exatamente\n",
+        "    # no mesmo regime. Pequenas variações operacionais,\n",
+        "    # carga parcial e comportamento do usuário geram\n",
+        "    # flutuações naturais no consumo energético.\n",
+        "    #\n",
+        "    # Usamos um ruído multiplicativo moderado (~8%).\n",
+        "    #\n",
+        "    operational_variation = np.random.normal(1, 0.08)\n",
+        "    consumption = consumption * operational_variation\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 8) Tamanho da empresa\n",
+        "    # -------------------------------------------------\n",
+        "    company_size = sample_company_size(usage_type)\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 9) Fonte energética\n",
+        "    # -------------------------------------------------\n",
+        "    energy_source = sample_energy_source(energy_dist)\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 10) Emissão base (sua lógica atual)\n",
+        "    # -------------------------------------------------\n",
+        "    co2 = calculate_emission(consumption, energy_source, emission_df)\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 11) VARIAÇÃO REAL DO FATOR DE EMISSÃO\n",
+        "    # -------------------------------------------------\n",
+        "    # Mesmo dentro da mesma fonte energética existe\n",
+        "    # variação operacional:\n",
+        "    #\n",
+        "    # • qualidade do combustível\n",
+        "    # • eficiência da planta\n",
+        "    # • mistura de geração\n",
+        "    # • condições de operação\n",
+        "    #\n",
+        "    # Isso é modelado como uma pequena variação\n",
+        "    # no fator efetivo de emissão (~6%).\n",
+        "    #\n",
+        "    emission_factor_variation = np.random.normal(1, 0.06)\n",
+        "    co2 = co2 * emission_factor_variation\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 12) RUÍDO FINAL DE MEDIÇÃO / PROCESSO\n",
+        "    # -------------------------------------------------\n",
+        "    # Última camada de ruído representa:\n",
+        "    #\n",
+        "    # • imprecisão de medição\n",
+        "    # • pequenas perdas do sistema\n",
+        "    # • arredondamentos operacionais\n",
+        "    #\n",
+        "    measurement_noise = np.random.normal(1, 0.03)\n",
+        "    co2 = co2 * measurement_noise\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 13) Data dentro do mês sorteado\n",
+        "    # -------------------------------------------------\n",
+        "    date = (\n",
+        "        pd.Timestamp('2025-01-01')\n",
+        "        + pd.DateOffset(months=month-1)\n",
+        "        + pd.to_timedelta(np.random.randint(0,28), unit='D')\n",
+        "    )\n",
+        "\n",
+        "\n",
+        "    # -------------------------------------------------\n",
+        "    # 14) Retorno do evento\n",
+        "    # -------------------------------------------------\n",
+        "    return {\n",
+        "\n",
+        "        'company_id': f\"C{np.random.randint(100000,999999)}\",\n",
+        "\n",
+        "        'date': date,\n",
+        "\n",
+        "        'state': state,\n",
+        "\n",
+        "        'usage_type': usage_type,\n",
+        "\n",
+        "        'company_size': company_size,\n",
+        "\n",
+        "        'fuel_type': row['fuel_type'],\n",
+        "\n",
+        "        'energy_kwh': consumption,\n",
+        "\n",
+        "        'energy_source': energy_source,\n",
+        "\n",
+        "        'co2_emission': co2\n",
+        "    }"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "dc3oBo0kVVp0"
+      },
+      "source": [
+        "gerar dataset"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "vb7oZk7MVR6r"
+      },
+      "outputs": [],
+      "source": [
+        "def generate_dataset(n):\n",
+        "\n",
+        "    data = []\n",
+        "\n",
+        "    for _ in range(n):\n",
+        "        data.append(generate_event(profiles))\n",
+        "\n",
+        "    return pd.DataFrame(data)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "fBprqJNVVbJ5"
+      },
+      "source": [
+        "Montar dataset com tudo"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 206
+        },
+        "id": "rd2o9aU_VXIS",
+        "outputId": "bd1e58ba-a4ed-41c9-daf2-b9fe91840dd8"
+      },
+      "outputs": [],
+      "source": [
+        "df = generate_dataset(100000)\n",
+        "\n",
+        "df.head()"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "cKZATUBvY5b_"
+      },
+      "outputs": [],
+      "source": [
+        "df.to_csv('../data/processed/synthetic_energy_emissions_dataset.csv')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "SqtUtbquQvQa"
+      },
+      "outputs": [],
+      "source": []
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.13.12"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
