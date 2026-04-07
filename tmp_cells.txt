@@ -1,0 +1,438 @@
+--- Cell 50 ---
+def generate_event(profiles):
+
+    weights = profiles['usage_type'].map(usage_probs)
+
+    row = profiles.sample(1, weights=weights).iloc[0]
+
+    consumption = generate_consumption(row)
+
+    return {
+        'usage_type': row['usage_type'],
+        'fuel_type': row['fuel_type'],
+        'energy_kwh': consumption
+    }
+
+--- Cell 51 ---
+def generate_dataset(n, profiles):
+    data = []
+
+    for _ in range(n):
+        event = generate_event(profiles)
+        data.append(event)
+
+    return pd.DataFrame(data)
+
+--- Cell 70 ---
+df_grouped = df_aneel.groupby('SigTipoGeracao')['MdaPotenciaInstaladaKW'].sum().reset_index()
+
+df_grouped.columns = ['energy_source', 'total_generation']
+
+--- Cell 71 ---
+df_grouped['probability'] = df_grouped['total_generation'] / df_grouped['total_generation'].sum()
+
+df_dist = df_grouped[['energy_source', 'probability']]
+df_dist = df_dist.copy()
+
+--- Cell 74 ---
+map_sources = {
+    'UHE': 'hydro',      # Hidrelétrica grande
+    'PCH': 'hydro',      # Pequena central hidrelétrica
+    'CGH': 'hydro',      # Central geradora hidráulica
+
+    'EOL': 'wind',       # Eólica
+
+    'UFV': 'solar',      # Solar fotovoltaica
+
+    # se aparecer depois:
+    'UTE': 'thermal',    # termoelétrica (genérico)
+    'UTN': 'nuclear',    # nuclear
+}
+df_dist['energy_source'] = df_dist['energy_source'].map(map_sources)
+
+--- Cell 75 ---
+df_dist = df_dist.groupby('energy_source')['probability'].sum().reset_index()
+
+--- Cell 79 ---
+df_dist.to_csv('../data/processed/v2_energy_source_distribution.csv')
+
+--- Cell 80 ---
+emission_factors = pd.read_csv('../data/processed/v2_energy_source_emission_factors.csv')
+
+--- Cell 81 ---
+def calculate_emission(energy_kwh, energy_source, emission_df):
+
+    row = emission_df.loc[
+        emission_df['energy_source'] == energy_source
+    ]
+
+    if row.empty:
+        raise ValueError(f"Fonte não encontrada: {energy_source}")
+
+    factor = row['emission_factor'].values[0]
+
+    return energy_kwh * factor
+
+--- Cell 82 ---
+def sample_energy_source(dist_df):
+    return dist_df.sample(1, weights=dist_df['probability']).iloc[0]['energy_source']
+
+--- Cell 84 ---
+def generate_event(profiles, energy_dist, emission_df):
+
+    usage_types = normalize_usage_types(profiles['usage_type'])
+
+    weights = usage_types.map(usage_probs)
+
+    if weights.sum() == 0:
+        raise ValueError("usage_probs não corresponde aos usage_type do profile")
+
+    row = profiles.sample(1, weights=weights).iloc[0]
+
+    consumption = generate_consumption(row)
+
+    energy_source = sample_energy_source(energy_dist)
+
+    co2 = calculate_emission(consumption, energy_source, emission_df)
+
+    return {
+        'usage_type': row['usage_type'],
+        'fuel_type': row['fuel_type'],
+        'energy_kwh': consumption,
+        'energy_source': energy_source,
+        'co2_emission': co2
+    }
+
+--- Cell 85 ---
+import pandas as pd
+profiles = pd.read_csv('../data/processed/v2_consumption_profiles.csv')
+
+energy_dist = pd.read_csv('../data/processed/v2_energy_source_distribution.csv')
+
+emission_df = pd.read_csv('../data/processed/v2_energy_source_emission_factors.csv')
+
+--- Cell 86 ---
+event = generate_event(profiles, energy_dist, emission_df)
+event
+
+--- Cell 87 ---
+def generate_dataset(n, profiles, energy_dist, emission_df):
+    data = []
+
+    for _ in range(n):
+        event = generate_event(profiles, energy_dist, emission_df)
+        data.append(event)
+
+    return pd.DataFrame(data)
+
+--- Cell 88 ---
+df = generate_dataset(10000, profiles, energy_dist, emission_df)
+df.describe()
+
+--- Cell 95 ---
+def generate_event(profiles, energy_dist, emission_df):
+
+    usage_types = normalize_usage_types(profiles['usage_type'])
+
+    weights = usage_types.map(usage_probs)
+
+    if weights.sum() == 0:
+        raise ValueError("usage_probs não corresponde aos usage_type do profile")
+
+    row = profiles.sample(1, weights=weights).iloc[0]
+
+    consumption = generate_consumption(row)
+
+    energy_source = sample_energy_source(energy_dist)
+
+    co2 = calculate_emission(consumption, energy_source, emission_df)
+
+    return {
+        'company_id': f"C{np.random.randint(100000,999999)}",
+        'date': pd.Timestamp('2025-01-01') + pd.to_timedelta(np.random.randint(0,365), unit='D'),
+        'state': np.random.choice(states, p=state_weights),
+        'usage_type': row['usage_type'],
+        'fuel_type': row['fuel_type'],
+        'energy_kwh': consumption,
+        'energy_source': energy_source,
+        'co2_emission': co2
+    }
+
+--- Cell 96 ---
+def generate_dataset(n, profiles, energy_dist, emission_df):
+    data = []
+
+    for _ in range(n):
+        event = generate_event(profiles, energy_dist, emission_df)
+        data.append(event)
+
+    return pd.DataFrame(data)
+
+--- Cell 97 ---
+df = generate_dataset(10000, profiles, energy_dist, emission_df)
+df.describe()
+
+--- Cell 114 ---
+def generate_event(profiles, energy_dist, emission_df):
+
+    # sorteia estado
+    state = np.random.choice(states, p=state_weights)
+
+    # pega probabilidades de setor para esse estado
+    usage_probs_state = usage_distribution_by_state.loc[state].values
+    usage_probs_state = usage_probs_state / usage_probs_state.sum()
+
+    # sorteia setor
+    usage_types = profiles['usage_type'].unique()
+
+    usage_type = np.random.choice(
+        usage_types,
+        p=usage_probs_state
+    )
+
+    # filtra profiles para esse setor
+    profiles_subset = profiles[profiles['usage_type'] == usage_type]
+
+    # escolhe linha de profile
+    row = profiles_subset.sample(1).iloc[0]
+
+    # gera consumo
+    consumption = generate_consumption(row)
+
+    # sorteia fonte de energia
+    energy_source = sample_energy_source(energy_dist)
+
+    # calcula CO2
+    co2 = calculate_emission(consumption, energy_source, emission_df)
+
+    return {
+        'company_id': f"C{np.random.randint(100000,999999)}",
+        'date': pd.Timestamp('2025-01-01') + pd.to_timedelta(np.random.randint(0,365), unit='D'),
+        'state': np.random.choice(states, p=state_weights),
+        'usage_type': usage_type,
+        'fuel_type': row['fuel_type'],
+        'energy_kwh': consumption,
+        'energy_source': energy_source,
+        'co2_emission': co2
+    }
+
+--- Cell 115 ---
+def generate_dataset(n, profiles, energy_dist, emission_df):
+    data = []
+
+    for _ in range(n):
+        event = generate_event(profiles, energy_dist, emission_df)
+        data.append(event)
+
+    return pd.DataFrame(data)
+
+--- Cell 116 ---
+df = generate_dataset(10000, profiles, energy_dist, emission_df)
+df.describe()
+
+--- Cell 118 ---
+df = generate_dataset(10000, profiles, energy_dist, emission_df)
+
+--- Cell 153 ---
+import pandas as pd
+import numpy as np
+
+profiles = pd.read_csv('../data/processed/v2_consumption_profiles.csv')
+
+energy_dist = pd.read_csv('../data/processed/v2_energy_source_distribution.csv')
+
+emission_df = pd.read_csv('../data/processed/v2_energy_source_emission_factors.csv')
+
+usage_distribution_by_state = pd.read_csv(
+    '../data/processed/v2_usage_distribution_by_state.csv',
+    index_col=0
+)
+
+company_size_dist = pd.read_csv(
+    '../data/processed/v2_company_size_distribution_by_usage.csv'
+)
+
+seasonality = pd.read_csv(
+    '../data/processed/v2_seasonality_state_class_month.csv'
+)
+
+state_dist = pd.read_csv('../data/processed/v2_state_distribution.csv')
+states = state_dist['UF'].values
+state_weights = state_dist['Consumo'].values / state_dist['Consumo'].sum()
+
+
+--- Cell 154 ---
+# Todos os CSVs já estão em português minúsculo após a conversão.
+# Verificação de consistência:
+
+assert set(profiles['usage_type'].unique()) <= {'comercial', 'industrial', 'outros', 'residencial', 'rural'}, \
+    f"usage_type inesperado em profiles: {set(profiles['usage_type'].unique())}"
+
+assert set(company_size_dist['Classe'].unique()) <= {'comercial', 'industrial', 'outros', 'residencial', 'rural'}, \
+    f"Classe inesperada em company_size_dist: {set(company_size_dist['Classe'].unique())}"
+
+assert set(seasonality['Classe'].unique()) <= {'comercial', 'industrial', 'outros', 'residencial', 'rural'}, \
+    f"Classe inesperada em seasonality: {set(seasonality['Classe'].unique())}"
+
+setores_state = set(usage_distribution_by_state.columns)
+setores_profiles = set(profiles['usage_type'].unique())
+assert setores_state == setores_profiles, \
+    f"Mismatch setores: state={setores_state} | profiles={setores_profiles}"
+
+print("✓ Todas as categorias estão consistentes em PT-BR")
+print("  Setores:", sorted(setores_profiles))
+print("  Fontes:", sorted(energy_dist['energy_source'].unique()))
+print("  Portes:", sorted(company_size_dist['company_size'].unique()))
+
+
+--- Cell 155 ---
+print('profiles: '+profiles.columns,'\n')
+print('energy_dist: '+energy_dist.columns,'\n')
+print('emission_df: '+emission_df.columns,'\n')
+print('usage_distribution_by_state: '+usage_distribution_by_state.columns,'\n')
+print('company_size_dist: '+company_size_dist.columns,'\n')
+print('seasonality: '+seasonality.columns,'\n')
+
+--- Cell 161 ---
+print(energy_dist['probability'].sum())
+
+--- Cell 164 ---
+def sample_energy_source(dist_df):
+
+    return dist_df.sample(
+        1,
+        weights=dist_df['probability']
+    ).iloc[0]['energy_source']
+
+--- Cell 165 ---
+def calculate_emission(energy_kwh, energy_source, emission_df):
+
+    row = emission_df.loc[
+        emission_df['energy_source'] == energy_source
+    ]
+
+    factor = row['emission_factor'].values[0]
+
+    return energy_kwh * factor
+
+--- Cell 168 ---
+def generate_event(profiles):
+
+    # -------------------------------------------------
+    # 1) Escolha do estado
+    # -------------------------------------------------
+    estado = np.random.choice(states, p=state_weights)
+
+
+    # -------------------------------------------------
+    # 2) Sorteio do mês
+    # -------------------------------------------------
+    mes = np.random.randint(1, 13)
+
+
+    # -------------------------------------------------
+    # 3) Setor econômico condicionado ao estado
+    # -------------------------------------------------
+    probs_estado = usage_distribution_by_state.loc[estado].values.astype(float)
+    probs_estado = probs_estado / probs_estado.sum()
+
+    setores = usage_distribution_by_state.columns.tolist()
+
+    setor = np.random.choice(setores, p=probs_estado)
+
+
+    # -------------------------------------------------
+    # 4) Perfil do setor
+    # -------------------------------------------------
+    profiles_subset = profiles[profiles['usage_type'] == setor]
+
+    if profiles_subset.empty:
+        raise ValueError(f"Nenhum perfil encontrado para o setor: {setor!r}")
+
+    row = profiles_subset.sample(1).iloc[0]
+
+
+    # -------------------------------------------------
+    # 5) Consumo base
+    # -------------------------------------------------
+    consumo = generate_consumption(row)
+
+
+    # -------------------------------------------------
+    # 6) Ajuste de sazonalidade
+    # -------------------------------------------------
+    consumo = apply_seasonality(consumo, estado, setor, mes)
+
+
+    # -------------------------------------------------
+    # 7) Ruído operacional (~8%)
+    # -------------------------------------------------
+    consumo = consumo * np.random.normal(1, 0.08)
+
+
+    # -------------------------------------------------
+    # 8) Porte da empresa
+    # -------------------------------------------------
+    porte = sample_company_size(setor)
+
+
+    # -------------------------------------------------
+    # 9) Fonte de energia
+    # -------------------------------------------------
+    fonte = sample_energy_source(energy_dist)
+
+
+    # -------------------------------------------------
+    # 10) Emissão de CO₂ base
+    # -------------------------------------------------
+    co2 = calculate_emission(consumo, fonte, emission_df)
+
+
+    # -------------------------------------------------
+    # 11) Variação do fator de emissão (~6%)
+    # -------------------------------------------------
+    co2 = co2 * np.random.normal(1, 0.06)
+
+
+    # -------------------------------------------------
+    # 12) Ruído de medição (~3%)
+    # -------------------------------------------------
+    co2 = co2 * np.random.normal(1, 0.03)
+
+
+    # -------------------------------------------------
+    # 13) Data dentro do mês sorteado
+    # -------------------------------------------------
+    data = (
+        pd.Timestamp('2025-01-01')
+        + pd.DateOffset(months=mes - 1)
+        + pd.to_timedelta(np.random.randint(0, 28), unit='D')
+    )
+
+
+    # -------------------------------------------------
+    # 14) Retorno do evento
+    # -------------------------------------------------
+    return {
+        'id_empresa':      f"C{np.random.randint(100000, 999999)}",
+        'data':            data,
+        'estado':          estado,
+        'setor':           setor,
+        'porte':           porte,
+        'tipo_combustivel': row['fuel_type'],
+        'consumo_kwh':     consumo,
+        'fonte_energia':   fonte,
+        'emissao_co2':     co2,
+    }
+
+
+--- Cell 169 ---
+def generate_dataset(n):
+    """Gera n eventos sintéticos de consumo e emissão de CO₂."""
+    data = []
+
+    for _ in range(n):
+        data.append(generate_event(profiles))
+
+    return pd.DataFrame(data)
+
