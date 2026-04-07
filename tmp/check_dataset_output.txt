@@ -1,0 +1,51 @@
+=== DATASET GERADO ===
+Shape: (100000, 9)
+Colunas: ['company_id', 'date', 'state', 'usage_type', 'company_size', 'fuel_type', 'energy_kwh', 'energy_source', 'co2_emission']
+Valores nulos: 0
+
+-- usage_type --
+usage_type
+industrial     0.390
+residential    0.282
+commercial     0.175
+other          0.098
+agriculture    0.055
+Name: proportion, dtype: float64
+
+-- company_size --
+company_size
+small     0.528
+large     0.319
+medium    0.153
+Name: proportion, dtype: float64
+
+-- energy_source --
+energy_source
+hydro      0.516
+thermal    0.226
+wind       0.161
+solar      0.087
+nuclear    0.009
+Name: proportion, dtype: float64
+
+-- co2_emission resumo --
+count    100000.00
+mean       2704.27
+std        9073.21
+min           0.42
+25%          11.31
+50%         121.97
+75%         774.94
+max      238674.99
+Name: co2_emission, dtype: float64
+
+-- energy_kwh resumo --
+count    100000.00
+mean      18006.21
+std       27594.43
+min          36.47
+25%         260.79
+50%        2453.50
+75%       29373.26
+max      368049.67
+Name: energy_kwh, dtype: float64
