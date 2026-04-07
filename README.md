@@ -9,8 +9,9 @@
 Este projeto utiliza Ciência de Dados e Machine Learning para quantificar o impacto ambiental (pegada de carbono) de atividades energéticas. Através de um dataset sintético baseado em parâmetros reais (IPCC, EPE), desenvolvemos um modelo capaz de estimar emissões de CO2 com extrema precisão, auxiliando na tomada de decisão para estratégias de sustentabilidade (ESG).
 
 ### 🏆 Resultados Principais
-- **Performance do Modelo**: R² de **0,9942** (Random Forest Regressor).
-- **Robustez**: Stress Test com 5% de ruído manteve o R² acima de **0,9905**.
+- **Performance do Modelo**: R² de **0,9948** (Gradient Boosting Regressor / Random Forest).
+- **Competição de Modelos**: O pipeline agora compara Linear Regression, Random Forest e Gradient Boosting, selecionando automaticamente o melhor.
+- **Robustez**: Stress Test com 5% de ruído manteve o R² acima de **0.99** no modelo campeão.
 - **Insights**: Identificação do Consumo (kWh) e Fonte de Energia como os principais drivers de emissão.
 
 ---
@@ -22,9 +23,9 @@ O projeto seguiu rigorosamente as 6 fases da metodologia CRISP-DM:
 1.  **[Business Understanding](./docs/crisp_framework.md#1-business-understanding)**: Definição de objetivos e KPIs de sustentabilidade.
 2.  **[Data Understanding](./notebooks/02_eda_analysis.ipynb)**: EDA profunda, análise de sazonalidade e detecção de outliers.
 3.  **[Data Preparation](./notebooks/03_model_preparation.ipynb)**: Pipelines de Normalização e One-Hot Encoding.
-4.  **[Modeling](./notebooks/04_model_training.ipynb)**: Comparação entre modelos lineares e de ensemble (Random Forest).
-5.  **[Evaluation](./docs/relatorio_final_modelagem.md)**: Validação métrica e testes de estresse para evitar overfitting.
-6.  **[Deployment](./notebooks/05_model_deployment.ipynb)**: Persistência do modelo e interface CLI.
+4.  **[Modeling](./notebooks/04_model_training.ipynb)**: Comparação entre modelos lineares e de ensemble (**Random Forest** e **Gradient Boosting**).
+5.  **[Evaluation](./docs/relatorio_final_modelagem.md)**: Validação métrica, análise de importância de atributos e testes de estresse.
+6.  **[Deployment](./notebooks/05_model_deployment.ipynb)**: Exportação do melhor modelo para `best_carbon_footprint_model.joblib` e interface CLI.
 
 ---
 
@@ -47,8 +48,8 @@ python scripts/predict_co2.py --kwh 1500 --state SP --type industrial --source t
 ## 📂 Estrutura do Repositório
 - `data/` → Conjuntos de dados brutos e processados.
 - `docs/` → Relatórios detalhados de cada fase do projeto.
-- `models/` → O modelo treinado salvo em formato `.joblib`.
-- `notebooks/` → O passo a passo técnico do desenvolvimento.
+- `models/` → O **melhor modelo** treinado salvo como `best_carbon_footprint_model.joblib`.
+- `notebooks/` → O passo a passo técnico do desenvolvimento (Fases 1-6).
 - `scripts/` → Utilitários de treinamento, stress test e ferramentas de predição.
 
 ---
