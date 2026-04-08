@@ -8,11 +8,11 @@ setor_map = {
     'industrial':   'industrial',
     'other':        'outros',
     'residential':  'residencial',
-    'Comercial':    'comercial',
-    'Industrial':   'industrial',
-    'Outros':       'outros',
-    'Residencial':  'residencial',
-    'Rural':        'rural',
+    'comercial':    'comercial',
+    'industrial':   'industrial',
+    'outros':       'outros',
+    'residencial':  'residencial',
+    'rural':        'rural',
 }
 
 fonte_map = {
@@ -47,10 +47,11 @@ def harmonize_file(filename, column_mappings):
     modified = False
     for col, mapping in column_mappings.items():
         if col in df.columns:
-            df[col] = df[col].map(lambda x: mapping.get(x, x))
+            # Enhanced mapping: handle whitespace and case-insensitivity
+            df[col] = df[col].apply(lambda x: mapping.get(str(x).strip().lower(), x) if pd.notnull(x) else x)
             modified = True
         elif col == '_columns_':  # Special case for column labels
-            df.columns = [mapping.get(c, c) for c in df.columns]
+            df.columns = [mapping.get(str(c).strip().lower(), c) for c in df.columns]
             modified = True
 
     if modified:
