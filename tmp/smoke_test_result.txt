@@ -11,15 +11,15 @@ emissao_co2                float64
 dtype: object
 
 === df.head() ===
-  id_empresa       data estado        setor    porte tipo_combustivel   consumo_kwh fonte_energia  emissao_co2
-0    C711671 2025-01-12     MA       outros   grande         electric   7855.157586        eólica    87.990940
-1    C616272 2025-05-08     MG    comercial   grande         electric   1973.444684       térmica  1264.859327
-2    C447055 2025-05-20     MG   industrial  pequena         electric  15011.712407  hidrelétrica   329.972825
-3    C872765 2025-04-09     SP    comercial    média         electric   1512.224164  hidrelétrica    32.479946
-4    C330046 2025-03-20     SC  residencial  pequena         electric    167.952028        eólica     1.418079
+  id_empresa       data estado        setor    porte tipo_combustivel   consumo_kwh fonte_energia   emissao_co2
+0    C347034 2025-04-10     RJ    comercial   grande         electric   1762.938747        eólica     18.648355
+1    C143397 2025-07-11     RS   industrial  pequena         electric  28630.062182       térmica  16853.412657
+2    C318280 2025-06-20     SP   industrial   grande         electric  48032.919266        eólica    524.051160
+3    C906437 2025-05-07     CE    comercial    média         electric    587.309300         solar     13.627519
+4    C477297 2025-07-06     SP  residencial  pequena         electric    152.072463  hidrelétrica      2.862135
 
 === Valores únicos por coluna categórica ===
-  estado: ['AC', 'AL', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RS', 'SC', 'SE', 'SP', 'TO']
+  estado: ['AL', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO']
   setor: [np.str_('comercial'), np.str_('industrial'), np.str_('outros'), np.str_('residencial'), np.str_('rural')]
   porte: ['grande', 'média', 'pequena']
   tipo_combustivel: ['electric']
@@ -28,10 +28,10 @@ dtype: object
 === Estatísticas numéricas ===
          consumo_kwh   emissao_co2
 count     500.000000    500.000000
-mean    18094.267394   2941.223065
-std     26669.238061   9679.414510
-min        85.322702      1.033062
-25%       249.632273      9.053971
-50%      2198.159540    107.022664
-75%     29224.446083    689.084854
-max    143406.296269  74994.438323
+mean    16842.506094   2174.744499
+std     27815.094885   7873.594196
+min        78.839618      0.813291
+25%       246.202238      5.818726
+50%      1738.692410     87.924356
+75%     25743.142090    659.865900
+max    195467.284158  71277.562867
