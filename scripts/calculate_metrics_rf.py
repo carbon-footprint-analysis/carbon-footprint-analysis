@@ -10,7 +10,7 @@ from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import os
 
 # Path to data
-data_path = r'c:\Repositorio\carbon-footprint-analysis\data\processed\synthetic_energy_emissions_dataset.csv'
+data_path = 'https://raw.githubusercontent.com/carbon-footprint-analysis/carbon-footprint-analysis/main/data/processed/synthetic_energy_emissions_dataset.csv'
 df = pd.read_csv(data_path)
 
 # Preprocessing
