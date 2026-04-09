@@ -1,6 +1,6 @@
 energy_source,emission_factor
-hidrelétrica,0.02
-eólica,0.01
-solar,0.02
-térmica,0.6
-nuclear,0.01
+hidrelétrica,0.004
+eólica,0.011
+nuclear,0.012
+solar,0.045
+térmica,0.82
