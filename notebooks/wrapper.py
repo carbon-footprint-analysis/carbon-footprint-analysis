@@ -7,7 +7,7 @@ model = joblib.load(os.path.join(BASE_DIR, "models", "best_carbon_footprint_mode
 
 
 def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
-    sources = ['hidrelétrica', 'nuclear', 'solar', 'térmica', 'eólica']  # nomes do dataset original
+    sources = ['hidrelétrica', 'nuclear', 'solar', 'térmica', 'eólica']
     results = {}
 
     for source in sources:
