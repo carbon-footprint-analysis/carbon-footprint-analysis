@@ -98,6 +98,14 @@ def compute_shap(_pipeline, consumo_kwh, mes, estado, setor, fonte_energia):
     preprocessor  = _pipeline.named_steps["preprocessor"]
     regressor     = _pipeline.named_steps["regressor"]
     x_transformed = preprocessor.transform(df_in)
+    # ─── INÍCIO DA CORREÇÃO ───
+    # 2. Converte para array denso se for esparso
+    if hasattr(x_transformed, "toarray"):
+        x_transformed = x_transformed.toarray()
+    
+    # 3. Garante que o tipo seja float (resolve o erro de dtype 'O')
+    x_transformed = x_transformed.astype(float)
+    # ─── FIM DA CORREÇÃO ───
     explainer     = shap.TreeExplainer(regressor)
     shap_vals     = explainer.shap_values(x_transformed)
     feature_names = get_feature_names(_pipeline)
