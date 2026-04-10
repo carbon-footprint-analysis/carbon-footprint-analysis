@@ -641,7 +641,8 @@ with tab5:
 
         # ── Waterfall ─────────────────────────────────────────────────────────
         st.markdown("#### 🌊 Waterfall — Contribuição de cada variável")
-        st.caption(f"Cenário: **{sr['label']}** · Valor base (média do modelo): **{sr['expected_val']:,.1f} kg CO₂**")
+        # Adicionamos [0] para pegar o valor numérico dentro do array
+        st.caption(f"Cenário: **{sr['label']}** · Valor base (média do modelo): **{float(sr['expected_val']):,.1f} kg CO₂**")
 
         explanation = shap.Explanation(
             values=sr["shap_row"],
