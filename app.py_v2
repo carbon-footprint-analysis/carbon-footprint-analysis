@@ -1,0 +1,178 @@
+import streamlit as st
+import pandas as pd
+import joblib
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+import shap
+import os
+
+# --- 1. CONFIGURAÇÕES DA PÁGINA ---
+st.set_page_config(
+    page_title="Carbon Insight - Dashboard de Sustentabilidade",
+    page_icon="🌳",
+    layout="wide"
+)
+
+# --- 2. CACHE DE RECURSOS E DADOS (MELHORIA ITEM 4.2) ---
+@st.cache_resource
+def load_model():
+    model_path = "models/best_carbon_footprint_model.joblib"
+    if os.path.exists(model_path):
+        return joblib.load(model_path)
+    return None
+
+@st.cache_data
+def load_dataset():
+    data_path = "data/processed/synthetic_energy_emissions_dataset.csv"
+    if os.path.exists(data_path):
+        return pd.read_csv(data_path)
+    return None
+
+def get_season(month):
+    if month in [12, 1, 2]: return 'Summer'
+    if month in [3, 4, 5]: return 'Autumn'
+    if month in [6, 7, 8]: return 'Winter'
+    return 'Spring'
+
+# Carregamento inicial
+pipeline = load_model()
+df_base = load_dataset()
+
+# --- 3. BARRA LATERAL (INPUTS) ---
+st.sidebar.header("⚙️ Parâmetros de Simulação")
+
+if pipeline:
+    st.sidebar.success("Modelo carregado com sucesso!")
+    
+    consumo = st.sidebar.number_input("Consumo de Energia (kWh)", min_value=0.0, value=250.0, step=10.0)
+    mes = st.sidebar.slider("Mês de Referência", 1, 12, 6)
+    estado = st.sidebar.selectbox("Estado", ['SP', 'RJ', 'MG', 'RS', 'BA', 'PR', 'SC', 'PE', 'GO', 'CE'])
+    setor = st.sidebar.selectbox("Setor de Consumo", ['Residencial', 'Comercial', 'Industrial'])
+    fonte = st.sidebar.selectbox("Fonte de Energia", ['Rede Elétrica', 'Solar', 'Eólica', 'Térmica', 'Hidrelétrica'])
+    
+    # Preparar dados para predição
+    df_input = pd.DataFrame([{
+        "consumo_kwh": consumo,
+        "mes": mes,
+        "estado": estado,
+        "setor": setor,
+        "fonte_energia": fonte,
+        "season": get_season(mes)
+    }])
+else:
+    st.sidebar.error("Modelo não encontrado em models/")
+
+# --- 4. CORPO PRINCIPAL ---
+st.title("🌳 Carbon Footprint Analysis v2.0")
+st.markdown("---")
+
+if not pipeline:
+    st.warning("Aguardando carregamento do modelo para iniciar as análises.")
+else:
+    tabs = st.tabs(["📊 Predição", "📈 Variação Mensal", "🔍 Explicabilidade (SHAP)", "📁 Dados Base"])
+
+    # --- ABA 1: PREDIÇÃO E INSIGHTS (MELHORIA ITEM 4.1) ---
+    with tabs[0]:
+        col_pred, col_insight = st.columns([1, 1])
+        
+        prediction = pipeline.predict(df_input)[0]
+        
+        with col_pred:
+            st.metric("Emissão Estimada", f"{prediction:,.2f} kg CO₂")
+            st.progress(min(prediction / 1000, 1.0)) # Exemplo de barra de intensidade
+            
+            # Botão de Exportação (Melhoria Bônus)
+            export_df = df_input.copy()
+            export_df['co2_prediction'] = prediction
+            csv = export_df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Baixar Relatório (CSV)", csv, "relatorio_carbono.csv", "text/csv")
+
+        with col_insight:
+            st.subheader("💡 Insights Acionáveis")
+            if fonte == 'Térmica':
+                st.error("🚨 **Alerta de Alta Emissão:** Fontes térmicas impactam severamente o meio ambiente. Mudar para Solar pode reduzir drasticamente este valor.")
+            elif fonte == 'Solar' or fonte == 'Eólica':
+                st.success("✨ **Excelente escolha!** Sua pegada é otimizada pelo uso de fontes renováveis.")
+            
+            if consumo > 500:
+                st.warning("🔋 **Dica de Eficiência:** Seu consumo está acima da média residencial. Considere revisar o isolamento térmico ou equipamentos antigos.")
+
+    # --- ABA 2: VARIAÇÃO MENSAL (MELHORIA ITEM 4.3 - ZOOM) ---
+    with tabs[1]:
+        st.subheader("📅 Variação Mensal Estimada")
+        
+        # Gerar dados para os 12 meses mantendo outros inputs fixos
+        meses_dados = []
+        for m in range(1, 13):
+            temp_df = df_input.copy()
+            temp_df['mes'] = m
+            temp_df['season'] = get_season(m)
+            meses_dados.append(temp_df)
+        
+        df_mensal = pd.concat(meses_dados)
+        df_mensal['CO2_Pred'] = pipeline.predict(df_mensal)
+        df_mensal['Nome_Mes'] = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+        fig_evolucao = px.line(df_mensal, x='Nome_Mes', y='CO2_Pred', markers=True, 
+                               labels={'CO2_Pred': 'kg CO₂', 'Nome_Mes': 'Mês'})
+        
+        # ZOOM DINÂMICO: Ajusta o eixo Y para mostrar a variação sutil
+        y_min = df_mensal['CO2_Pred'].min() * 0.99
+        y_max = df_mensal['CO2_Pred'].max() * 1.01
+        fig_evolucao.update_layout(yaxis_range=[y_min, y_max])
+        
+        st.plotly_chart(fig_evolucao, use_container_width=True)
+        st.caption("Nota: O gráfico aplica zoom automático para destacar variações sazonais.")
+
+    # --- ABA 3: SHAP (COM TRATAMENTO DE ERRO DE TYPE) ---
+    with tabs[2]:
+        st.subheader("🕵️ Explicabilidade do Modelo")
+        
+        try:
+            # Reutilizando a lógica de transformação do pipeline
+            preprocessor = pipeline.named_steps['preprocessor']
+            regressor = pipeline.named_steps['regressor']
+            
+            x_transformed = preprocessor.transform(df_input)
+            
+            # Garantir formato denso e float para o SHAP
+            if hasattr(x_transformed, "toarray"):
+                x_transformed = x_transformed.toarray()
+            x_transformed = x_transformed.astype(float)
+            
+            explainer = shap.TreeExplainer(regressor)
+            shap_values = explainer.shap_values(x_transformed)
+            
+            # Recuperar nomes das colunas após transformação
+            num_cols = ['consumo_kwh', 'mes']
+            cat_cols = ['estado', 'setor', 'fonte_energia', 'season']
+            cat_names = preprocessor.named_transformers_['cat'].get_feature_names_out(cat_cols)
+            feature_names = num_cols + list(cat_names)
+            
+            # Gráfico de força (Waterfall simplificado)
+            st.write("Impacto de cada variável na predição atual:")
+            fig_shap = go.Figure(go.Bar(
+                x=shap_values[0],
+                y=feature_names,
+                orientation='h',
+                marker_color=['red' if x > 0 else 'green' for x in shap_values[0]]
+            ))
+            fig_shap.update_layout(title="Contribuição por Feature (SHAP)", height=600)
+            st.plotly_chart(fig_shap, use_container_width=True)
+            
+            st.info(f"O valor base do modelo (média) é **{float(explainer.expected_value):,.2f} kg CO₂**.")
+            
+        except Exception as e:
+            st.error(f"Erro ao calcular explicabilidade: {e}")
+
+    # --- ABA 4: DATASET ---
+    with tabs[3]:
+        st.subheader("📄 Visão Geral dos Dados de Treinamento")
+        if df_base is not None:
+            st.dataframe(df_base.head(100))
+        else:
+            st.info("Dataset original não encontrado na pasta data/processed/.")
+
+st.markdown("---")
+st.caption("Desenvolvido para o Hackathon de Sustentabilidade 2026.")
