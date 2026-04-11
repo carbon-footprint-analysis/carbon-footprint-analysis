@@ -681,7 +681,8 @@ with tab5:
         st.info(
             f"📌 **Maior fator de aumento:** `{top_pos}`  \n"
             f"📌 **Maior fator de redução:** `{top_neg}`  \n"
-            f"O modelo partiu de uma base de **{sr['expected_val']:,.1f} kg CO₂** "
+            # Adicionando float() para converter o array em um número escalar
+            f"O modelo partiu de uma base de **{float(sr['expected_val']):,.1f} kg CO₂** "
             f"e chegou a **{sr['co2_pred']:,.2f} kg CO₂** após considerar todas as variáveis."
         )
 
