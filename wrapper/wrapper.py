@@ -34,7 +34,8 @@ def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
             "mes": [month],
             "estado": [state],
             "setor": [usage_type],
-            "fonte_energia": [source]
+            "fonte_energia": [source],
+            "season": [season]
         })
 
         co2 = model.predict(df)[0]
