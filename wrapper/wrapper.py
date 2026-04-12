@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
 import joblib
 import pandas as pd
 import os
@@ -13,6 +15,14 @@ app = FastAPI(
     title="Carbon Footprint API",
     description="API para comparar emissões de energia",
     version="1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # permite qualquer origem
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class EnergyInput(BaseModel):
