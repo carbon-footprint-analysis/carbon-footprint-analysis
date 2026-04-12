@@ -34,7 +34,7 @@ class EnergyInput(BaseModel):
 
 def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
 
-    sources = ['hidreletrica', 'nuclear', 'solar', 'termica', 'eolica']
+    sources = ['hidrelétrica', 'nuclear', 'solar', 'térmica', 'eólica']
     results = {}
 
     for source in sources:
