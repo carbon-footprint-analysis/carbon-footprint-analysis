@@ -40,12 +40,12 @@ def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
     for source in sources:
 
         df = pd.DataFrame({
-            "consumo_kwh": [energy_kwh],
-            "mes": [month],
-            "estado": [state],
-            "setor": [usage_type],
-            "fonte_energia": [source],
-            "season": [season]
+        "consumo_kwh": [energy_kwh],
+        "estado": [state],
+        "setor": [usage_type],
+        "fonte_energia": [source],
+        "mes": [month],
+        "season": [season]
         })
 
         co2 = model.predict(df)[0]
