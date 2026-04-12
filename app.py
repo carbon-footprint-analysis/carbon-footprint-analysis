@@ -33,6 +33,32 @@ COLOR_MAP   = {
     "etanol":"#FF9800","gasolina":"#795548","diesel":"#607D8B",
 }
 
+# ── Transporte ─────────────────────────────────────────────────────────────────
+TRANSPORT_FACTORS = {
+    "bicicleta":  0.000,
+    "metro_trem": 0.006,
+    "onibus":     0.089,
+    "carro":      0.192,
+    "moto":       0.113,
+    "aviao":      0.255,
+}
+TRANSPORT_LABELS = {
+    "bicicleta":  "🚲 Bicicleta / A pé",
+    "metro_trem": "🚇 Metrô / Trem",
+    "onibus":     "🚌 Ônibus urbano",
+    "carro":      "🚗 Carro (gasolina)",
+    "moto":       "🏍️ Moto (gasolina)",
+    "aviao":      "✈️ Avião doméstico",
+}
+TRANSPORT_COLOR = {
+    "bicicleta":  "#4CAF50",
+    "metro_trem": "#2196F3",
+    "onibus":     "#FF9800",
+    "carro":      "#F44336",
+    "moto":       "#9C27B0",
+    "aviao":      "#607D8B",
+}
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def get_season(m: int) -> str:
     if m in [12, 1, 2]: return "Verao"
@@ -98,14 +124,6 @@ def compute_shap(_pipeline, consumo_kwh, mes, estado, setor, fonte_energia):
     preprocessor  = _pipeline.named_steps["preprocessor"]
     regressor     = _pipeline.named_steps["regressor"]
     x_transformed = preprocessor.transform(df_in)
-    # ─── INÍCIO DA CORREÇÃO ───
-    # 2. Converte para array denso se for esparso
-    if hasattr(x_transformed, "toarray"):
-        x_transformed = x_transformed.toarray()
-    
-    # 3. Garante que o tipo seja float (resolve o erro de dtype 'O')
-    x_transformed = x_transformed.astype(float)
-    # ─── FIM DA CORREÇÃO ───
     explainer     = shap.TreeExplainer(regressor)
     shap_vals     = explainer.shap_values(x_transformed)
     feature_names = get_feature_names(_pipeline)
@@ -122,12 +140,13 @@ if model_error:
 # ══════════════════════════════════════════════════════════════════════════════
 # TABS
 # ══════════════════════════════════════════════════════════════════════════════
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Visão Geral",
     "⚖️ Simulador de Cenários",
     "🎯 Meta de Redução",
     "📂 Análise em Lote (CSV)",
     "🔍 Explicabilidade (SHAP)",
+    "🚗 Pegada Total (Energia + Transporte)",
 ])
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -641,8 +660,7 @@ with tab5:
 
         # ── Waterfall ─────────────────────────────────────────────────────────
         st.markdown("#### 🌊 Waterfall — Contribuição de cada variável")
-        # Adicionamos [0] para pegar o valor numérico dentro do array
-        st.caption(f"Cenário: **{sr['label']}** · Valor base (média do modelo): **{float(sr['expected_val']):,.1f} kg CO₂**")
+        st.caption(f"Cenário: **{sr['label']}** · Valor base (média do modelo): **{sr['expected_val']:,.1f} kg CO₂**")
 
         explanation = shap.Explanation(
             values=sr["shap_row"],
@@ -681,9 +699,144 @@ with tab5:
         st.info(
             f"📌 **Maior fator de aumento:** `{top_pos}`  \n"
             f"📌 **Maior fator de redução:** `{top_neg}`  \n"
-            # Adicionando float() para converter o array em um número escalar
-            f"O modelo partiu de uma base de **{float(sr['expected_val']):,.1f} kg CO₂** "
+            f"O modelo partiu de uma base de **{sr['expected_val']:,.1f} kg CO₂** "
             f"e chegou a **{sr['co2_pred']:,.2f} kg CO₂** após considerar todas as variáveis."
         )
 
 st.caption("Modelo: Random Forest · R² ≈ 0.994 · Dashboard v3.0")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 6 — PEGADA TOTAL (ENERGIA + TRANSPORTE)
+# ══════════════════════════════════════════════════════════════════════════════
+with tab6:
+    st.subheader("🚗 Pegada Total — Energia + Transporte")
+    st.markdown(
+        "Calcule a **pegada de carbono completa**, somando emissões de energia elétrica "
+        "(Escopo 2) com emissões de mobilidade (Escopos 1 e 3)."
+    )
+    st.markdown("---")
+
+    t1, t2 = st.columns(2)
+    with t1:
+        st.markdown("#### ⚡ Energia")
+        t_consumo = st.number_input("Consumo (kWh)", min_value=1.0, max_value=500_000.0,
+                                     value=5_000.0, step=100.0, key="t_cons")
+        t_estado  = st.selectbox("Estado", ESTADOS, index=ESTADOS.index("SP"), key="t_est")
+        t_setor   = st.selectbox("Setor", SETORES, key="t_set")
+        t_fonte   = st.selectbox("Fonte de energia", FONTES, key="t_fon")
+        t_mes     = st.slider("Mês", 1, 12, 6, key="t_mes", format="%d")
+
+    with t2:
+        st.markdown("#### 🚗 Transporte")
+        modais_display = list(TRANSPORT_LABELS.values())
+        modais_keys    = list(TRANSPORT_LABELS.keys())
+        modal_sel_label = st.selectbox("Modal de transporte", modais_display, index=3, key="t_modal")
+        modal_sel = modais_keys[modais_display.index(modal_sel_label)]
+
+        t_km = st.number_input("Distância percorrida (km/mês)", min_value=0.0,
+                                max_value=50_000.0, value=500.0, step=10.0, key="t_km")
+
+        fator = TRANSPORT_FACTORS[modal_sel]
+        st.caption(f"Fator de emissão: **{fator} kg CO₂/km** · Fonte: IPCC AR6 / CETESB 2023")
+
+        st.markdown("##### Comparar todos os modais para essa distância")
+        show_all = st.checkbox("Mostrar ranking de modais", value=True, key="t_show_all")
+
+    st.markdown("---")
+    if st.button("🌍 Calcular pegada total", type="primary", use_container_width=True):
+        co2_energia     = predict_one(t_consumo, t_mes, t_estado, t_setor, t_fonte)
+        co2_transporte  = round(fator * t_km, 2)
+        co2_total       = round(co2_energia + co2_transporte, 2)
+        pct_energia     = round(co2_energia / co2_total * 100, 1) if co2_total > 0 else 0
+        pct_transporte  = round(co2_transporte / co2_total * 100, 1) if co2_total > 0 else 0
+
+        st.session_state["pegada_total"] = {
+            "co2_energia": co2_energia, "co2_transporte": co2_transporte,
+            "co2_total": co2_total, "pct_energia": pct_energia,
+            "pct_transporte": pct_transporte, "modal": modal_sel,
+            "km": t_km, "consumo": t_consumo, "fonte": t_fonte,
+            "estado": t_estado, "setor": t_setor, "mes": t_mes,
+        }
+
+    if "pegada_total" in st.session_state:
+        pt = st.session_state["pegada_total"]
+
+        # KPIs
+        pk1, pk2, pk3 = st.columns(3)
+        pk1.metric("Emissão — Energia", f"{pt['co2_energia']:,.1f} kg CO₂",
+                   delta=f"{pt['pct_energia']}% do total")
+        pk2.metric("Emissão — Transporte", f"{pt['co2_transporte']:,.1f} kg CO₂",
+                   delta=f"{pt['pct_transporte']}% do total")
+        pk3.metric("🌍 Pegada Total", f"{pt['co2_total']:,.1f} kg CO₂")
+
+        st.markdown("---")
+        c1, c2 = st.columns(2)
+
+        with c1:
+            st.markdown("#### Composição da pegada de carbono")
+            df_comp = pd.DataFrame([
+                {"Escopo": "Energia (Escopo 2)", "CO₂ (kg)": pt["co2_energia"]},
+                {"Escopo": "Transporte (Escopos 1/3)", "CO₂ (kg)": pt["co2_transporte"]},
+            ])
+            fig_comp = px.pie(df_comp, values="CO₂ (kg)", names="Escopo",
+                              color_discrete_sequence=["#2196F3", "#FF9800"],
+                              hole=0.45, template="plotly_white")
+            fig_comp.update_traces(textposition="outside", textinfo="label+percent")
+            fig_comp.update_layout(showlegend=False, height=320,
+                                   margin=dict(l=10, r=10, t=10, b=10))
+            st.plotly_chart(fig_comp, use_container_width=True)
+
+        with c2:
+            if show_all:
+                st.markdown("#### Ranking de modais para a mesma distância")
+                df_modais = pd.DataFrame([
+                    {"Modal": TRANSPORT_LABELS[m], "CO₂ Transporte (kg)": round(f * pt["km"], 2),
+                     "Pegada Total (kg)": round(pt["co2_energia"] + f * pt["km"], 2),
+                     "key": m}
+                    for m, f in TRANSPORT_FACTORS.items()
+                ]).sort_values("CO₂ Transporte (kg)")
+
+                fig_mod = px.bar(
+                    df_modais, x="CO₂ Transporte (kg)", y="Modal", orientation="h",
+                    color="key", color_discrete_map={k: TRANSPORT_COLOR[k] for k in TRANSPORT_COLOR},
+                    text="CO₂ Transporte (kg)", template="plotly_white",
+                )
+                fig_mod.update_traces(texttemplate="%{text:,.1f}", textposition="outside")
+                fig_mod.update_layout(showlegend=False, height=320,
+                                      yaxis={"categoryorder": "total ascending"},
+                                      margin=dict(l=0, r=60, t=10, b=10))
+                # Destaca modal selecionado
+                for trace in fig_mod.data:
+                    if trace.name == pt["modal"]:
+                        trace.marker.line = dict(color="black", width=2)
+                st.plotly_chart(fig_mod, use_container_width=True)
+
+        # Insight de redução
+        best_modal_key  = min(TRANSPORT_FACTORS, key=TRANSPORT_FACTORS.get)
+        best_modal_co2  = round(TRANSPORT_FACTORS[best_modal_key] * pt["km"], 2)
+        saving_transport = round(pt["co2_transporte"] - best_modal_co2, 2)
+
+        if saving_transport > 0:
+            nova_total = round(pt["co2_energia"] + best_modal_co2, 2)
+            reducao_pct = round(saving_transport / pt["co2_total"] * 100, 1)
+            st.success(
+                f"💡 Trocando **{TRANSPORT_LABELS[pt['modal']]}** por "
+                f"**{TRANSPORT_LABELS[best_modal_key]}** para os mesmos **{pt['km']:,.0f} km**, "
+                f"a emissão de transporte cai de **{pt['co2_transporte']:,.1f} kg** para "
+                f"**{best_modal_co2:,.1f} kg CO₂** — reduzindo a pegada total em "
+                f"**{reducao_pct}%** ({saving_transport:,.1f} kg CO₂)."
+            )
+        else:
+            st.success(f"✅ **{TRANSPORT_LABELS[pt['modal']]}** já é o modal com menor emissão!")
+
+        # Tabela de referência
+        with st.expander("📋 Tabela de fatores de emissão por modal"):
+            df_ref = pd.DataFrame([
+                {"Modal": TRANSPORT_LABELS[m],
+                 "Fator (kg CO₂/km)": f,
+                 "Emissão p/ 500km (kg)": round(f * 500, 1),
+                 "Fonte": "IPCC AR6 / CETESB 2023"}
+                for m, f in TRANSPORT_FACTORS.items()
+            ])
+            st.dataframe(df_ref, use_container_width=True, hide_index=True)
+
