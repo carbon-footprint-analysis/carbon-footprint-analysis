@@ -1,8 +1,26 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
 import joblib
 import pandas as pd
+import os
 
-model = joblib.load("/content/carbon-footprint-analysis/models/best_carbon_footprint_model.joblib")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+model_path = os.path.join(BASE_DIR, "models", "best_carbon_footprint_model.joblib")
 
+model = joblib.load(model_path)
+
+app = FastAPI(
+    title="Carbon Footprint API",
+    description="API para comparar emissões de energia",
+    version="1.0"
+)
+
+class EnergyInput(BaseModel):
+    energy_kwh: float
+    month: int
+    state: str
+    usage_type: str
+    season: str
 
 def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
 
@@ -65,3 +83,16 @@ def compare_energy_sources(energy_kwh, month, state, usage_type, season):
     ranking = dict(sorted(combined.items(), key=lambda x: x[1]))
 
     return ranking
+
+@app.post("/compare")
+def compare(data: EnergyInput):
+
+    result = compare_energy_sources(
+        data.energy_kwh,
+        data.month,
+        data.state,
+        data.usage_type,
+        data.season
+    )
+
+    return result
