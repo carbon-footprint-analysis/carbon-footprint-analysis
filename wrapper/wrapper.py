@@ -40,8 +40,8 @@ WIND_EMISSION_FACTOR = 0.012
 
 def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
 
-    # removemos eólica do modelo
-    sources = ['hidrelétrica', 'nuclear', 'solar', 'térmica']
+    
+    sources = ['hidreletrica', 'nuclear', 'solar', 'térmica']
 
     results = {}
 
