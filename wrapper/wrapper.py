@@ -24,18 +24,17 @@ class EnergyInput(BaseModel):
 
 def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
 
-    sources = ['hydro', 'nuclear', 'solar', 'thermal', 'wind']
+    sources = ['hidreletrica', 'nuclear', 'solar', 'termica', 'eolica']
     results = {}
 
     for source in sources:
 
         df = pd.DataFrame({
-            "energy_kwh": [energy_kwh],
-            "month": [month],
-            "state": [state],
-            "usage_type": [usage_type],
-            "energy_source": [source],
-            "season": [season]
+            "consumo_kwh": [energy_kwh],
+            "mes": [month],
+            "estado": [state],
+            "setor": [usage_type],
+            "fonte_energia": [source]
         })
 
         co2 = model.predict(df)[0]
