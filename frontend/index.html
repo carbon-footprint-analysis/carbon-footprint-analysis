@@ -21,7 +21,9 @@
 
 </head>
 
+
 <body>
+
 <header>
 
 <h1>Calculadora de emissão de Carbono</h1>
@@ -36,6 +38,7 @@ utilizando informações públicas da EPE (Empresa de Pesquisa Energética) e AN
 </p>
 
 </header>
+
 
 <main>
 
@@ -54,6 +57,7 @@ placeholder="Ex: 1200"
 required
 aria-required="true"
 >
+
 
 <label for="month">Mês</label>
 
@@ -75,6 +79,7 @@ aria-required="true"
 <option value="12">Dezembro</option>
 
 </select>
+
 
 <label for="state">Estado</label>
 
@@ -112,6 +117,7 @@ aria-required="true"
 
 </select>
 
+
 <label for="usage_type">Setor</label>
 
 <select id="usage_type" name="usage_type" required aria-required="true">
@@ -123,6 +129,7 @@ aria-required="true"
 
 </select>
 
+
 <label for="season">Estação</label>
 
 <select id="season" name="season" required aria-required="true">
@@ -133,6 +140,7 @@ aria-required="true"
 <option value="Primavera">Primavera</option>
 
 </select>
+
 
 <div class="buttons">
 
@@ -148,13 +156,18 @@ Limpar
 
 </form>
 
+
 <section id="result" aria-live="polite">
 
 </section>
 
+
+<canvas id="chart" style="margin-top:20px;"></canvas>
+
 </div>
 
 </main>
+
 
 <footer>
 
@@ -168,6 +181,9 @@ Ferramenta educacional para comparação de impacto ambiental entre fontes de en
 </p>
 
 </footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="script.js"></script>
 
