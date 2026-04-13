@@ -5,8 +5,15 @@
 ![Tech: Python & Scikit-Learn](https://img.shields.io/badge/Tech-Python%20%26%20Scikit--Learn-orange)
 ![Dashboard: Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-red)
 ![Explainability: SHAP](https://img.shields.io/badge/Explainability-SHAP-purple)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://carbon-footprint-analysis-boecleew2tvmqhserkqkmr.streamlit.app/)
+
+## 🚀 Demonstração ao Vivo
+
+O dashboard pode ser acessado online através do link abaixo:
+🔗 [Acessar Dashboard de Pegada de Carbono](https://carbon-footprint-analysis-boecleew2tvmqhserkqkmr.streamlit.app/)
 
 ---
+
 ![Interface Principal](pegada_1.png)
 ![Análise de Transporte](pegada_transporte.png)
 ![Explicabilidade com SHAP](pegada_shap.png)
