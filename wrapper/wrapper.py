@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
 import joblib
 import pandas as pd
 import os
@@ -15,6 +17,15 @@ app = FastAPI(
     version="1.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 class EnergyInput(BaseModel):
     energy_kwh: float
     month: int
@@ -22,19 +33,26 @@ class EnergyInput(BaseModel):
     usage_type: str
     season: str
 
+
+# fator médio de emissão da energia eólica
+WIND_EMISSION_FACTOR = 0.012
+
+
 def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
 
-    sources = ['hydro', 'nuclear', 'solar', 'thermal', 'wind']
+    
+    sources = ['hidreletrica', 'nuclear', 'solar', 'térmica']
+
     results = {}
 
     for source in sources:
 
         df = pd.DataFrame({
-            "energy_kwh": [energy_kwh],
-            "month": [month],
-            "state": [state],
-            "usage_type": [usage_type],
-            "energy_source": [source],
+            "consumo_kwh": [energy_kwh],
+            "estado": [state],
+            "setor": [usage_type],
+            "fonte_energia": [source],
+            "mes": [month],
             "season": [season]
         })
 
@@ -42,7 +60,7 @@ def predict_all_sources(model, energy_kwh, month, state, usage_type, season):
 
         results[source] = round(float(co2), 2)
 
-    return dict(sorted(results.items(), key=lambda x: x[1]))
+    return results
 
 
 def liquid_fuel_emissions(energy_kwh):
@@ -62,7 +80,15 @@ def liquid_fuel_emissions(energy_kwh):
 
         results[fuel] = round(co2, 2)
 
-    return dict(sorted(results.items(), key=lambda x: x[1]))
+    return results
+
+
+def wind_emission(energy_kwh):
+
+    # cálculo manual da eólica
+    co2 = energy_kwh * WIND_EMISSION_FACTOR
+
+    return {"eólica": round(co2, 2)}
 
 
 def compare_energy_sources(energy_kwh, month, state, usage_type, season):
@@ -76,13 +102,16 @@ def compare_energy_sources(energy_kwh, month, state, usage_type, season):
         season
     )
 
+    wind = wind_emission(energy_kwh)
+
     fuels = liquid_fuel_emissions(energy_kwh)
 
-    combined = {**electricity, **fuels}
+    combined = {**electricity, **wind, **fuels}
 
     ranking = dict(sorted(combined.items(), key=lambda x: x[1]))
 
     return ranking
+
 
 @app.post("/compare")
 def compare(data: EnergyInput):

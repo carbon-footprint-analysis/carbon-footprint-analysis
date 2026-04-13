@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Calculadora de Emissão de Carbono | Comparador de Fontes de Energia</title>
+
+<meta name="description" content="Simule e compare emissões de CO₂ entre diferentes fontes de energia no Brasil utilizando dados públicos da EPE e ANEEL.">
+
+<meta name="keywords" content="emissão de carbono, CO2, energia limpa, pegada de carbono, energia Brasil, sustentabilidade, energia renovável">
+
+<meta name="author" content="Carbon Footprint Analysis">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="robots" content="index, follow">
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+<header>
+
+<h1>Calculadora de emissão de Carbono</h1>
+
+<p class="subtitle">
+Compare as emissões de CO₂ entre diferentes fontes de energia.
+</p>
+
+<p class="data-source">
+Dados estimados com base nas médias de geração elétrica do Brasil em 2025,
+utilizando informações públicas da EPE (Empresa de Pesquisa Energética) e ANEEL.
+</p>
+
+</header>
+
+
+<main>
+
+<div class="container">
+
+<form id="carbonForm" aria-label="Formulário de cálculo de emissões de carbono">
+
+<label for="energy_kwh">Consumo de Energia (kWh)</label>
+
+<input 
+type="number"
+id="energy_kwh"
+name="energy_kwh"
+min="1"
+placeholder="Ex: 1200"
+required
+aria-required="true"
+>
+
+
+<label for="month">Mês</label>
+
+<select id="month" name="month" required aria-required="true">
+
+<option value="" disabled selected>Selecione o mês</option>
+
+<option value="1">Janeiro</option>
+<option value="2">Fevereiro</option>
+<option value="3">Março</option>
+<option value="4">Abril</option>
+<option value="5">Maio</option>
+<option value="6">Junho</option>
+<option value="7">Julho</option>
+<option value="8">Agosto</option>
+<option value="9">Setembro</option>
+<option value="10">Outubro</option>
+<option value="11">Novembro</option>
+<option value="12">Dezembro</option>
+
+</select>
+
+
+<label for="state">Estado</label>
+
+<select id="state" name="state" required aria-required="true">
+
+<option value="" disabled selected>Selecione o estado</option>
+
+<option value="AC">Acre</option>
+<option value="AL">Alagoas</option>
+<option value="AP">Amapá</option>
+<option value="AM">Amazonas</option>
+<option value="BA">Bahia</option>
+<option value="CE">Ceará</option>
+<option value="DF">Distrito Federal</option>
+<option value="ES">Espírito Santo</option>
+<option value="GO">Goiás</option>
+<option value="MA">Maranhão</option>
+<option value="MT">Mato Grosso</option>
+<option value="MS">Mato Grosso do Sul</option>
+<option value="MG">Minas Gerais</option>
+<option value="PA">Pará</option>
+<option value="PB">Paraíba</option>
+<option value="PR">Paraná</option>
+<option value="PE">Pernambuco</option>
+<option value="PI">Piauí</option>
+<option value="RJ">Rio de Janeiro</option>
+<option value="RN">Rio Grande do Norte</option>
+<option value="RS">Rio Grande do Sul</option>
+<option value="RO">Rondônia</option>
+<option value="RR">Roraima</option>
+<option value="SC">Santa Catarina</option>
+<option value="SP">São Paulo</option>
+<option value="SE">Sergipe</option>
+<option value="TO">Tocantins</option>
+
+</select>
+
+
+<label for="usage_type">Setor</label>
+
+<select id="usage_type" name="usage_type" required aria-required="true">
+
+<option value="industrial">Industrial</option>
+<option value="commercial">Comercial</option>
+<option value="residential">Residencial</option>
+<option value="rural">Rural</option>
+
+</select>
+
+
+<label for="season">Estação</label>
+
+<select id="season" name="season" required aria-required="true">
+
+<option value="Verão">Verão</option>
+<option value="Outono">Outono</option>
+<option value="Inverno">Inverno</option>
+<option value="Primavera">Primavera</option>
+
+</select>
+
+
+<div class="buttons">
+
+<button type="submit" aria-label="Calcular emissões de carbono">
+Calcular
+</button>
+
+<button type="reset" aria-label="Limpar formulário">
+Limpar
+</button>
+
+</div>
+
+</form>
+
+
+<section id="result" aria-live="polite">
+
+</section>
+
+
+<canvas id="chart" style="margin-top:20px;"></canvas>
+
+</div>
+
+</main>
+
+
+<footer>
+
+<p>
+Projeto de análise de emissões baseado em dados públicos da
+EPE (Empresa de Pesquisa Energética) e ANEEL.
+</p>
+
+<p>
+Ferramenta educacional para comparação de impacto ambiental entre fontes de energia.
+</p>
+
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
