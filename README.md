@@ -7,6 +7,9 @@
 ![Explainability: SHAP](https://img.shields.io/badge/Explainability-SHAP-purple)
 
 ---
+![Interface Principal](pegada_1.png)
+![Análise de Transporte](pegada_transporte.png)
+![Explicabilidade com SHAP](pegada_shap.png)
 
 ## 📌 Visão Geral
 
