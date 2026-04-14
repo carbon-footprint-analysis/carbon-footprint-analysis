@@ -177,11 +177,12 @@ button[type="reset"]:hover {
 /* Resultado */
 
 #result {
-    margin-top: 25px;
-    padding: 15px;
-    border-radius: 4px;
-    background-color: #f0f4f8;
-    font-size: 15px;
+  display: none;
+  margin-top: 25px;
+  padding: 15px;
+  border-radius: 4px;
+  background-color: #f0f4f8;
+  font-size: 15px;
 }
 
 

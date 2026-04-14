@@ -173,6 +173,7 @@ function mostrarResultado(data){
         }
 
     });
+result.style.display = "block";
 metrics.style.display = "block";
 }
 
@@ -210,5 +211,7 @@ form.addEventListener("reset", function(){
         chart.destroy();
         chart = null;
     }
+    // esconde resultado
+    result.style.display = "none";
 
 });
