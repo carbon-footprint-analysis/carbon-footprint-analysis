@@ -34,7 +34,7 @@ Compare as emissões de CO₂ entre diferentes fontes de energia.
 
 <p class="data-source">
 Dados estimados com base nas médias de geração elétrica do Brasil em 2025,
-utilizando informações públicas da EPE (Empresa de Pesquisa Energética) e ANEEL.
+utilizando informações públicas da EPE (Empresa de Pesquisa Energética) e ANEEL (Agencia Nacional de Energia Elétrica) .
 </p>
 
 </header>
@@ -122,6 +122,8 @@ aria-required="true"
 
 <select id="usage_type" name="usage_type" required aria-required="true">
 
+<option value="" disabled selected>Selecione o Setor</option>
+
 <option value="industrial">Industrial</option>
 <option value="commercial">Comercial</option>
 <option value="residential">Residencial</option>
@@ -133,6 +135,8 @@ aria-required="true"
 <label for="season">Estação</label>
 
 <select id="season" name="season" required aria-required="true">
+
+<option value="" disabled selected>Selecione a estação</option>
 
 <option value="Verão">Verão</option>
 <option value="Outono">Outono</option>
