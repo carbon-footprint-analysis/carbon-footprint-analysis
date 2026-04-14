@@ -1,5 +1,6 @@
 const form = document.getElementById("carbonForm");
 const result = document.getElementById("result");
+const metrics = document.querySelector(".model-metrics");
 
 let chart; // evita duplicar gráfico
 
@@ -172,7 +173,7 @@ function mostrarResultado(data){
         }
 
     });
-
+metrics.style.display = "block";
 }
 
 
@@ -195,3 +196,19 @@ function formatarFonte(fonte){
     return nomes[fonte] || fonte;
 
 }
+
+form.addEventListener("reset", function(){
+
+    // limpa resultado
+    result.innerHTML = "";
+
+    // esconde métricas
+    metrics.style.display = "none";
+
+    // remove gráfico
+    if(chart){
+        chart.destroy();
+        chart = null;
+    }
+
+});
