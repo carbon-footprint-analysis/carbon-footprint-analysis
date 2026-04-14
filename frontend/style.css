@@ -66,9 +66,10 @@ label {
     font-weight: 600;
 }
 
-ul {
+#result ul {
   list-style: none;
-  }
+  padding-left: 0;
+}
 
 /* Inputs e selects */
 
