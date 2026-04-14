@@ -37,6 +37,15 @@ Dados estimados com base nas médias de geração elétrica do Brasil em 2025,
 utilizando informações públicas da EPE (Empresa de Pesquisa Energética) e ANEEL (Agencia Nacional de Energia Elétrica) .
 </p>
 
+<p>
+As emissões são calculadas com base na relação:
+<strong>CO₂ = Energia × Intensidade de carbono</strong>
+</p>
+
+<p><strong>Análise completa do dados:</strong></p> <a href="CarboonFootPrint_EDA.pdf" target="_blank" class="btn-pdf">
+  📄 Ver análise completa (EDA)
+</a>
+
 </header>
 
 
@@ -161,10 +170,17 @@ Limpar
 </form>
 
 
-<section id="result" aria-live="polite">
+<section id="result" aria-live="polite"></section>
 
-</section>
-
+<div class="model-metrics">
+  <h3>Desempenho do Modelo</h3>
+  <ul>
+    <li><strong>Modelo:</strong> Gradient Boosting</li>
+    <li><strong>R²:</strong> 0.9947</li>
+    <li><strong>MAE:</strong> 190.25</li>
+    <li><strong>RMSE:</strong> 887.91</li>
+  </ul>
+</div>
 
 <canvas id="chart" style="margin-top:20px;"></canvas>
 

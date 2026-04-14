@@ -28,6 +28,37 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
+.model-metrics {
+  margin-top: 20px;
+  padding: 15px;
+  background: #e8f5e9;
+  border-left: 4px solid #2ecc71;
+  border-radius: 6px;
+}
+
+.model-metrics h3 {
+  margin-bottom: 10px;
+}
+
+.model-metrics ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.btn-pdf {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 15px;
+  background-color: #2c7be5;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.btn-pdf:hover {
+  background-color: #1a68d1;
+}
 
 /* Cabeçalho */
 
