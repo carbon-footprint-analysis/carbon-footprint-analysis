@@ -19,9 +19,15 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Reduzir padding da sidebar
+# Importar Inter via Google Fonts + reduzir padding da sidebar
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif !important;
+    }
+
     /* Reduzir padding geral da sidebar */
     section[data-testid="stSidebar"] > div {
         padding-top: 1rem;
@@ -70,7 +76,27 @@ else:
 
 st.markdown(f"""
 <style>
-    /* Variáveis de tema */
+    /* ── Micro-animações globais ──────────────────────────── */
+    @keyframes slideInUp {{
+        from {{ opacity: 0; transform: translateY(24px); }}
+        to   {{ opacity: 1; transform: translateY(0); }}
+    }}
+    @keyframes fadeIn {{
+        from {{ opacity: 0; }}
+        to   {{ opacity: 1; }}
+    }}
+    @keyframes pulse-ring {{
+        0%   {{ box-shadow: 0 0 0 0 {THEME_COLORS["shadow"]}; }}
+        70%  {{ box-shadow: 0 0 0 8px rgba(0,0,0,0); }}
+        100% {{ box-shadow: 0 0 0 0 rgba(0,0,0,0); }}
+    }}
+    @keyframes gradient-shift {{
+        0%   {{ background-position: 0% 50%; }}
+        50%  {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%; }}
+    }}
+
+    /* ── Variáveis de tema ────────────────────────────────── */
     :root {{
         --bg-primary: {THEME_COLORS["bg_primary"]};
         --bg-secondary: {THEME_COLORS["bg_secondary"]};
@@ -83,197 +109,238 @@ st.markdown(f"""
         --shadow: {THEME_COLORS["shadow"]};
     }}
     
-    /* Background principal */
+    /* ── Background principal ─────────────────────────────── */
     .stApp {{
         background-color: var(--bg-primary);
         transition: background-color 0.3s ease;
+        font-family: 'Inter', sans-serif !important;
     }}
-    
-    /* Estilo das tabs */
+
+    /* ── Scrollbar customizada ────────────────────────────── */
+    ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+    ::-webkit-scrollbar-track {{ background: var(--bg-primary); }}
+    ::-webkit-scrollbar-thumb {{
+        background: {THEME_COLORS["accent_primary"]};
+        border-radius: 3px;
+    }}
+    ::-webkit-scrollbar-thumb:hover {{ background: {THEME_COLORS["accent_secondary"]}; }}
+
+    /* ── TABS — visual premium ────────────────────────────── */
     .stTabs [data-baseweb="tab-list"] {{
-        gap: 8px;
-        background-color: var(--bg-tertiary);
-        padding: 0.5rem;
-        border-radius: 10px;
+        gap: 6px;
+        background: {"rgba(30,37,48,0.7)" if st.session_state.dark_mode else "rgba(232,245,233,0.7)"};
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 0.45rem;
+        border-radius: 14px;
+        border: 1px solid {THEME_COLORS["border"]};
+        box-shadow: 0 4px 24px {THEME_COLORS["shadow"]};
         transition: background-color 0.3s ease;
     }}
-    
+
     .stTabs [data-baseweb="tab"] {{
-        height: 50px;
-        background-color: var(--bg-secondary);
-        border-radius: 8px;
-        padding: 0 24px;
+        height: 44px;
+        background-color: transparent;
+        border-radius: 10px;
+        padding: 0 20px;
         font-weight: 500;
-        border: 2px solid transparent;
-        transition: all 0.3s;
+        font-size: 0.88rem;
+        font-family: 'Inter', sans-serif;
+        border: 1.5px solid transparent;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         color: var(--text-primary);
+        letter-spacing: 0.01em;
     }}
-    
+
     .stTabs [data-baseweb="tab"]:hover {{
-        background-color: var(--bg-tertiary);
-        border-color: var(--border);
+        background-color: {"rgba(46,125,50,0.15)" if st.session_state.dark_mode else "rgba(255,255,255,0.8)"};
+        border-color: {THEME_COLORS["border"]};
+        transform: translateY(-1px);
     }}
-    
+
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, {THEME_COLORS["accent_primary"]} 0%, {THEME_COLORS["accent_secondary"]} 100%);
+        background: linear-gradient(135deg, {THEME_COLORS["accent_primary"]} 0%, {THEME_COLORS["accent_secondary"]} 100%) !important;
         color: white !important;
-        border: 2px solid {THEME_COLORS["accent_primary"]};
+        border: 1.5px solid transparent !important;
+        box-shadow: 0 4px 12px {THEME_COLORS["shadow"]}, 0 0 0 1px {THEME_COLORS["accent_primary"]}22;
+        font-weight: 600;
+        letter-spacing: 0.01em;
     }}
-    
-    /* Botões customizados */
+
+    /* Remover underline padrão do Streamlit nas tabs */
+    .stTabs [data-baseweb="tab-highlight"] {{
+        display: none !important;
+    }}
+    .stTabs [data-baseweb="tab-border"] {{
+        display: none !important;
+    }}
+
+    /* ── Botões customizados ──────────────────────────────── */
     .stButton > button {{
         background: linear-gradient(135deg, {THEME_COLORS["accent_primary"]} 0%, {THEME_COLORS["accent_secondary"]} 100%);
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        padding: 0.65rem 1.75rem;
         font-weight: 600;
-        transition: all 0.3s;
-        box-shadow: 0 2px 4px var(--shadow);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        letter-spacing: 0.02em;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px {THEME_COLORS["shadow"]};
     }}
-    
     .stButton > button:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px var(--shadow);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px {THEME_COLORS["shadow"]};
     }}
-    
-    /* Sidebar customizada */
+    .stButton > button:active {{
+        transform: translateY(-1px);
+    }}
+
+    /* ── SIDEBAR premium ──────────────────────────────────── */
     [data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+        background: linear-gradient(
+            160deg,
+            {"#0a1f0c" if st.session_state.dark_mode else "#E8F5E9"} 0%,
+            {"#0d2b10" if st.session_state.dark_mode else "#c8e6c9"} 40%,
+            {"#1a3d1c" if st.session_state.dark_mode else "#dcedc8"} 100%
+        ) !important;
+        border-right: 1px solid {THEME_COLORS["border"]};
         transition: background 0.3s ease;
     }}
-    
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{
-        padding: 0.5rem;
+        padding: 0.4rem;
         color: var(--text-primary);
     }}
-    
-    /* Reduzir espaçamento dos inputs na sidebar */
     [data-testid="stSidebar"] .stNumberInput,
     [data-testid="stSidebar"] .stSelectbox,
     [data-testid="stSidebar"] .stSlider {{
         margin-bottom: 0.5rem;
     }}
-    
     [data-testid="stSidebar"] .stNumberInput > label,
     [data-testid="stSidebar"] .stSelectbox > label,
     [data-testid="stSidebar"] .stSlider > label {{
-        font-size: 0.85rem;
-        margin-bottom: 0.2rem;
-        font-weight: 500;
+        font-size: 0.82rem;
+        margin-bottom: 0.15rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: {THEME_COLORS["accent_primary"]} !important;
     }}
-    
     [data-testid="stSidebar"] .stButton {{
-        margin-top: 0.5rem;
+        margin-top: 0.75rem;
     }}
-    
-    /* Métricas customizadas */
+    /* Input backgrounds na sidebar */
+    [data-testid="stSidebar"] input,
+    [data-testid="stSidebar"] select,
+    [data-testid="stSidebar"] [data-baseweb="select"] {{
+        background-color: {"rgba(255,255,255,0.07)" if st.session_state.dark_mode else "rgba(255,255,255,0.7)"} !important;
+        backdrop-filter: blur(4px);
+        border-color: {THEME_COLORS["border"]} !important;
+        border-radius: 8px !important;
+        font-family: 'Inter', sans-serif;
+    }}
+
+    /* ── Métricas ST nativas ──────────────────────────────── */
     [data-testid="stMetricValue"] {{
         font-size: 1.8rem;
         font-weight: 700;
+        font-family: 'Inter', sans-serif;
         color: var(--text-secondary);
     }}
-    
     [data-testid="stMetricLabel"] {{
-        font-size: 0.9rem;
+        font-size: 0.82rem;
+        font-family: 'Inter', sans-serif;
         color: var(--text-primary);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.06em;
+        font-weight: 600;
     }}
-    
-    /* Cards de alerta customizados */
+
+    /* ── Cards de alerta ──────────────────────────────────── */
     .stAlert {{
-        border-radius: 8px;
+        border-radius: 10px;
         border-left-width: 4px;
         background-color: var(--bg-secondary);
         color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
     }}
-    
-    /* Dataframes */
+
+    /* ── Dataframes ───────────────────────────────────────── */
     .dataframe {{
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: hidden;
         background-color: var(--bg-secondary);
+        font-family: 'Inter', sans-serif;
     }}
-    
-    /* Inputs */
+
+    /* ── Inputs globais ───────────────────────────────────── */
     .stTextInput > div > div > input,
     .stNumberInput > div > div > input,
     .stSelectbox > div > div {{
         background-color: var(--bg-secondary);
         color: var(--text-primary);
         border-color: var(--border);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
     }}
-    
-    /* Sliders */
     .stSlider > div > div > div {{
         background-color: var(--bg-tertiary);
     }}
-    
-    /* Animação de fade-in */
-    @keyframes fadeIn {{
-        from {{ opacity: 0; transform: translateY(20px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
-    
-    .fade-in {{
-        animation: fadeIn 0.5s ease-in;
-    }}
-    
-    /* Footer */
+
+    /* ── Fade-in utility ──────────────────────────────────── */
+    .fade-in {{ animation: fadeIn 0.5s ease-in; }}
+    .slide-in {{ animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
+
+    /* ── Footer ───────────────────────────────────────────── */
     .footer {{
         text-align: center;
         padding: 2rem;
         color: var(--text-primary);
-        border-top: 2px solid var(--border);
+        border-top: 2px solid {THEME_COLORS["border"]};
         margin-top: 3rem;
         transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
     }}
-    
-    /* Badges */
+
+    /* ── Badges ───────────────────────────────────────────── */
     .badge {{
-        display: inline-block;
-        padding: 0.35rem 0.85rem;
-        border-radius: 12px;
-        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.78rem;
         font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0.02em;
         margin: 0.25rem;
-        transition: all 0.3s ease;
+        transition: all 0.25s ease;
+        border: 1px solid transparent;
     }}
-    
     .badge-success {{
-        background-color: {"#2E4A2E" if st.session_state.dark_mode else "#C8E6C9"};
-        color: {"#A5D6A7" if st.session_state.dark_mode else "#1B5E20"};
+        background-color: {"#1e3d22" if st.session_state.dark_mode else "#d4edda"};
+        color: {"#81d98a" if st.session_state.dark_mode else "#155724"};
+        border-color: {"#2E7D32" if st.session_state.dark_mode else "#c3e6cb"};
     }}
-    
     .badge-info {{
-        background-color: {"#1E3A5F" if st.session_state.dark_mode else "#BBDEFB"};
-        color: {"#90CAF9" if st.session_state.dark_mode else "#0D47A1"};
+        background-color: {"#0d2a4a" if st.session_state.dark_mode else "#cce5ff"};
+        color: {"#90CAF9" if st.session_state.dark_mode else "#004085"};
+        border-color: {"#1565C0" if st.session_state.dark_mode else "#b8daff"};
     }}
-    
-    /* Textos */
-    h1, h2, h3, h4, h5, h6, p, span, div {{
+
+    /* ── Textos globais ───────────────────────────────────── */
+    h1, h2, h3, h4, h5, h6 {{
+        font-family: 'Inter', sans-serif !important;
         color: var(--text-primary);
         transition: color 0.3s ease;
     }}
-    
-    /* Responsividade */
+
+    /* ── Responsividade ───────────────────────────────────── */
     @media (max-width: 768px) {{
-        .main-header h1 {{
-            font-size: 1.8rem;
-        }}
-        
-        .stTabs [data-baseweb="tab"] {{
-            font-size: 0.8rem;
-            padding: 0 12px;
-        }}
-        
-        .theme-toggle {{
-            top: 0.5rem;
-            right: 0.5rem;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.9rem;
-        }}
+        .main-header h1 {{ font-size: 1.5rem; }}
+        .stTabs [data-baseweb="tab"] {{ font-size: 0.78rem; padding: 0 10px; }}
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -302,8 +369,8 @@ COLOR_MAP   = {
 # Template customizado para gráficos Plotly
 PLOTLY_TEMPLATE = {
     "layout": {
-        "font": {"family": "Arial, sans-serif", "size": 12, "color": "#1B5E20"},
-        "title": {"font": {"size": 16, "color": "#1B5E20", "family": "Arial, sans-serif"}},
+        "font": {"family": "Inter, sans-serif", "size": 12, "color": "#1B5E20"},
+        "title": {"font": {"size": 16, "color": "#1B5E20", "family": "Inter, sans-serif"}},
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(250,250,250,0.5)",
         "xaxis": {
@@ -433,47 +500,64 @@ def safe_division(numerator, denominator, default=0):
 
 def create_metric_card(label, value, delta=None, icon="📊", color="green"):
     """
-    Cria um card de métrica visualmente atraente com gradiente e hover effect.
+    Cria um card de métrica glassmorphism com gradiente e hover effect premium.
     
     Args:
         label: Rótulo da métrica
         value: Valor principal
         delta: Variação (opcional)
         icon: Ícone emoji
-        color: Cor do tema (green, blue, orange, red)
+        color: Cor do tema (green, blue, orange, red, purple)
         
     Returns:
         str: HTML do card
     """
-    colors = {
-        "green": {"bg": "linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)"},
-        "blue": {"bg": "linear-gradient(135deg, #1976D2 0%, #42A5F5 100%)"},
-        "orange": {"bg": "linear-gradient(135deg, #F57C00 0%, #FFB74D 100%)"},
-        "red": {"bg": "linear-gradient(135deg, #D32F2F 0%, #EF5350 100%)"},
+    palettes = {
+        "green":  {"grad": "135deg, #1B5E20 0%, #2E7D32 50%, #43A047 100%", "glow": "rgba(46,125,50,0.35)",  "border": "#4CAF50"},
+        "blue":   {"grad": "135deg, #0D47A1 0%, #1976D2 50%, #42A5F5 100%", "glow": "rgba(25,118,210,0.35)", "border": "#42A5F5"},
+        "orange": {"grad": "135deg, #E65100 0%, #F57C00 50%, #FFB74D 100%", "glow": "rgba(245,124,0,0.35)",  "border": "#FFB74D"},
+        "purple": {"grad": "135deg, #4A148C 0%, #7B1FA2 50%, #AB47BC 100%", "glow": "rgba(123,31,162,0.35)", "border": "#AB47BC"},
+        "red":    {"grad": "135deg, #B71C1C 0%, #D32F2F 50%, #EF5350 100%", "glow": "rgba(211,47,47,0.35)",  "border": "#EF5350"},
     }
-    
-    bg = colors.get(color, colors["green"])["bg"]
-    
+    p = palettes.get(color, palettes["green"])
+
     delta_html = ""
     if delta:
-        delta_html = f'''
-        <div style="margin-top: 0.5rem; padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.2); border-radius: 20px; display: inline-block; font-size: 0.85rem; color: white;">
-            {delta}
-        </div>
-        '''
-    
+        delta_html = f'<span style="display:inline-block;margin-top:0.65rem;padding:0.25rem 0.75rem;background:rgba(255,255,255,0.18);backdrop-filter:blur(4px);border-radius:20px;font-size:0.8rem;color:rgba(255,255,255,0.95);font-weight:500;border:1px solid rgba(255,255,255,0.25);">{delta}</span>'
+
+    _glow  = p["glow"]
+    _border = p["border"]
+    _grad   = p["grad"]
+
     return f"""
-    <div style="background: {bg}; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: white; transition: transform 0.3s, box-shadow 0.3s; cursor: pointer; height: 100%;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.25)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'">
-        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">{icon}</div>
-        <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">{label}</div>
-        <div style="font-size: 2.2rem; font-weight: 700; margin-top: 0.5rem;">{value}</div>
+    <div style="
+        background: linear-gradient({_grad});
+        padding: 1.4rem 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px {_glow}, inset 0 1px 0 rgba(255,255,255,0.15);
+        color: white;
+        transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s ease;
+        cursor: default;
+        height: 100%;
+        border: 1px solid rgba(255,255,255,0.12);
+        position: relative;
+        overflow: hidden;
+        animation: slideInUp 0.4s cubic-bezier(0.4,0,0.2,1);
+        font-family: 'Inter', sans-serif;"
+        onmouseover="this.style.transform='translateY(-6px) scale(1.01)'; this.style.boxShadow='0 12px 32px {_glow}, inset 0 1px 0 rgba(255,255,255,0.15)';"
+        onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 20px {_glow}, inset 0 1px 0 rgba(255,255,255,0.15)';"
+    >
+        <div style="position: absolute; top: -20px; right: -10px; font-size: 5rem; opacity: 0.12; line-height: 1;">{icon}</div>
+        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.85; font-weight: 600; margin-bottom: 0.4rem;">{label}</div>
+        <div style="font-size: 2rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em;">{value}</div>
         {delta_html}
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, {_border}, transparent); opacity: 0.7;"></div>
     </div>
     """
 
 def create_insight_card(title, message, type="success"):
     """
-    Cria card de insight destacado.
+    Cria card de insight glassmorphism com borda colorida e ícone.
     
     Args:
         title: Título do insight
@@ -483,37 +567,25 @@ def create_insight_card(title, message, type="success"):
     Returns:
         str: HTML do card
     """
-    styles = {
-        "success": {
-            "bg": "linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)",
-            "border": "#4CAF50",
-            "icon": "💡"
-        },
-        "warning": {
-            "bg": "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
-            "border": "#FF9800",
-            "icon": "⚠️"
-        },
-        "info": {
-            "bg": "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
-            "border": "#2196F3",
-            "icon": "ℹ️"
-        }
+    palettes = {
+        "success": {"grad": "135deg, rgba(46,125,50,0.12), rgba(76,175,80,0.08)", "border": "#4CAF50", "icon": "💡", "title_c": "#1B5E20"},
+        "warning": {"grad": "135deg, rgba(245,124,0,0.12), rgba(255,183,77,0.08)",  "border": "#FF9800", "icon": "⚠️",  "title_c": "#E65100"},
+        "info":    {"grad": "135deg, rgba(25,118,210,0.12), rgba(66,165,245,0.08)", "border": "#2196F3", "icon": "ℹ️",  "title_c": "#0D47A1"},
     }
-    
-    style = styles.get(type, styles["success"])
-    
-    return f"""
-    <div style="background: {style['bg']}; border-left: 4px solid {style['border']}; padding: 1.5rem; border-radius: 8px; margin: 1rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="font-size: 2rem;">{style['icon']}</div>
-            <div>
-                <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">{title}</div>
-                <div style="color: #555; line-height: 1.5;">{message}</div>
-            </div>
-        </div>
-    </div>
-    """
+    p = palettes.get(type, palettes["success"])
+    _text_c = "#ccc" if st.session_state.dark_mode else "#444"
+    _card_bg = f"linear-gradient({p['grad']})"
+    return (f'<div style="background:{_card_bg};border-left:4px solid {p["border"]};'
+            f'padding:1.25rem 1.5rem;border-radius:14px;margin:1rem 0;'
+            f'box-shadow:0 4px 20px rgba(0,0,0,0.08);backdrop-filter:blur(8px);'
+            f'-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);'
+            f'border-left:4px solid {p["border"]};animation:slideInUp 0.4s cubic-bezier(0.4,0,0.2,1);font-family:Inter,sans-serif;">'
+            f'<div style="display:flex;align-items:flex-start;gap:1rem;">'
+            f'<div style="font-size:1.75rem;flex-shrink:0;margin-top:0.1rem;">{p["icon"]}</div>'
+            f'<div>'
+            f'<div style="font-weight:700;font-size:1rem;margin-bottom:0.4rem;color:{p["title_c"]};">{title}</div>'
+            f'<div style="color:{_text_c};line-height:1.6;font-size:0.9rem;">{message}</div>'
+            f'</div></div></div>')
 
 def apply_chart_style(fig):
     """
@@ -539,17 +611,18 @@ def apply_chart_style(fig):
         text_color = "#1B5E20"
     
     fig.update_layout(
-        font=dict(family="Arial, sans-serif", size=12, color=text_color),
+        font=dict(family="Inter, sans-serif", size=12, color=text_color),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor=bg_color,
-        xaxis=dict(gridcolor=grid_color, linecolor=line_color, zerolinecolor=line_color),
-        yaxis=dict(gridcolor=grid_color, linecolor=line_color, zerolinecolor=line_color),
+        xaxis=dict(gridcolor=grid_color, linecolor=line_color, zerolinecolor=line_color, tickfont=dict(family="Inter, sans-serif")),
+        yaxis=dict(gridcolor=grid_color, linecolor=line_color, zerolinecolor=line_color, tickfont=dict(family="Inter, sans-serif")),
         hoverlabel=dict(
-            bgcolor="white" if not st.session_state.dark_mode else "#262C38",
+            bgcolor="white" if not st.session_state.dark_mode else "#1E2530",
             font_size=12,
-            font_family="Arial",
+            font_family="Inter, sans-serif",
             bordercolor="#2E7D32"
-        )
+        ),
+        legend=dict(font=dict(family="Inter, sans-serif", size=11)),
     )
     return fig
 
@@ -689,62 +762,88 @@ def compute_shap(_model, _consumo, _mes, _estado, _setor, _fonte):
 
     feature_names = preprocessor.get_feature_names_out()
     
-    return shap_vals[0], expected_value, x_transformed[0], feature_names# ── Dark Mode Toggle ───────────────────────────────────────────────────────────
-# Criar layout otimizado para o topo
-col_logo, col_title, col_stats, col_toggle = st.columns([0.8, 2.5, 3.2, 1.5])
+    return shap_vals[0], expected_value, x_transformed[0], feature_names# ── Hero Header ────────────────────────────────────────────────────────────────
+_hero_bg   = "rgba(10,31,12,0.85)" if st.session_state.dark_mode else "rgba(255,255,255,0.75)"
+_hero_brd  = THEME_COLORS["border"]
+_grad_from = THEME_COLORS["accent_primary"]
+_grad_to   = THEME_COLORS["accent_secondary"]
+_title_c   = THEME_COLORS["text_primary"]
+_sub_c     = THEME_COLORS["text_secondary"]
+_pill_bg   = "rgba(46,125,50,0.12)" if not st.session_state.dark_mode else "rgba(102,187,106,0.12)"
 
-with col_logo:
-    st.markdown("""
-    <div style="text-align: center; padding-top: 0.3rem;">
-        <div style="font-size: 3.5rem; line-height: 1;">🌿</div>
+st.markdown(f"""
+<div style="
+    background: {_hero_bg};
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid {_hero_brd};
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 32px {THEME_COLORS['shadow']};
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    animation: slideInUp 0.45s cubic-bezier(0.4,0,0.2,1);
+    font-family: 'Inter', sans-serif;
+">
+    <!-- Logo + título -->
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+        <div style="
+            width: 58px; height: 58px;
+            background: linear-gradient(135deg, {_grad_from}, {_grad_to});
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 16px {THEME_COLORS['shadow']};
+            flex-shrink: 0;
+        ">🌿</div>
+        <div>
+            <div style="font-size: 1.65rem; font-weight: 800; color: {_title_c};
+                letter-spacing: -0.03em; line-height: 1.1; font-family: 'Inter', sans-serif;">
+                Carbon Footprint Analysis
+            </div>
+            <div style="font-size: 0.82rem; color: {_sub_c}; margin-top: 0.2rem;
+                font-weight: 400; letter-spacing: 0.01em;">
+                Estimativa Inteligente de Emissões de CO₂
+            </div>
+        </div>
     </div>
-    """, unsafe_allow_html=True)
-
-with col_title:
-    title_color = THEME_COLORS["text_primary"]
-    subtitle_color = THEME_COLORS["text_secondary"]
-    st.markdown(f"""
-    <div style="padding-top: 0.5rem;">
-        <h1 style="margin: 0; font-size: 1.8rem; color: {title_color}; font-weight: 700;">
-            Carbon Footprint Analysis
-        </h1>
-        <p style="margin: 0; font-size: 0.85rem; color: {subtitle_color}; margin-top: 0.2rem;">
-            Estimativa Inteligente de Emissões de CO₂
-        </p>
+    <!-- Badges + Toggle -->
+    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <span class="badge badge-success">✓ R² = 0.9948</span>
+        <span class="badge badge-info">⚡ &lt; 50ms</span>
+        <span class="badge badge-success">🌱 CRISP-DM</span>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-with col_stats:
-    st.markdown("""
-    <div style="padding-top: 0.7rem; text-align: right;">
-        <span class="badge badge-success" style="font-size: 0.75rem;">✓ R² = 0.9948</span>
-        <span class="badge badge-info" style="font-size: 0.75rem;">⚡ < 50ms</span>
-        <span class="badge badge-success" style="font-size: 0.75rem;">🌱 CRISP-DM</span>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_toggle:
-    st.markdown("<div style='padding-top: 0.3rem;'></div>", unsafe_allow_html=True)
-    # Ícone baseado no tema atual
-    theme_icon = "🌙" if not st.session_state.dark_mode else "☀️"
+# Toggle de tema separado (abaixo do hero, alinhado à direita)
+_tcol, _toggle_col = st.columns([6, 1])
+with _toggle_col:
+    theme_icon  = "🌙" if not st.session_state.dark_mode else "☀️"
     theme_label = "Dark" if not st.session_state.dark_mode else "Light"
-    
     if st.button(f"{theme_icon} {theme_label}", key="theme_toggle", use_container_width=True):
         st.session_state.dark_mode = not st.session_state.dark_mode
         st.rerun()
 
-st.markdown("<div style='margin-bottom: 0.5rem;'></div>", unsafe_allow_html=True)
-
-# Separador visual elegante
+# Separador animado
 st.markdown(f"""
-<div style="height: 2px; background: linear-gradient(90deg, 
-    transparent 0%, 
-    {THEME_COLORS["accent_primary"]} 20%, 
-    {THEME_COLORS["accent_secondary"]} 50%, 
-    {THEME_COLORS["accent_primary"]} 80%, 
-    transparent 100%); 
-    margin: 1rem 0 2rem 0; 
-    border-radius: 2px;">
+<div style="
+    height: 3px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        {_grad_from} 25%,
+        {_grad_to} 50%,
+        {_grad_from} 75%,
+        transparent 100%);
+    background-size: 200% 100%;
+    animation: gradient-shift 4s ease infinite;
+    margin: 0.25rem 0 1.75rem 0;
+    border-radius: 2px;
+">
 </div>
 """, unsafe_allow_html=True)
 
@@ -768,14 +867,24 @@ with tab1:
         logo_bg = "white" if not st.session_state.dark_mode else "#262C38"
         logo_border = "none" if not st.session_state.dark_mode else "2px solid #2E7D32"
         
+        _sb_icon_bg = "linear-gradient(135deg, #1B5E20, #2E7D32)" if not st.session_state.dark_mode else "linear-gradient(135deg, #2E7D32, #66BB6A)"
         st.markdown(f"""
-        <div style="text-align: center; padding: 0.5rem; background: {logo_bg}; border: {logo_border}; border-radius: 8px; margin-bottom: 0.5rem;">
-            <div style="font-size: 2.5rem; line-height: 1;">🌿</div>
-            <h2 style="color: #2E7D32; margin: 0; font-size: 1.1rem; font-weight: 700;">Carbon</h2>
-            <h3 style="color: #66BB6A; margin: 0; font-size: 0.95rem; font-weight: 600;">Footprint</h3>
-            <p style="color: #666; font-size: 0.65rem; margin-top: 0.2rem; margin-bottom: 0;">
-                Análise de Emissões
-            </p>
+        <div style="text-align: center; padding: 1rem 0.5rem 0.75rem; margin-bottom: 0.25rem;">
+            <div style="
+                width: 56px; height: 56px;
+                background: {_sb_icon_bg};
+                border-radius: 16px;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.8rem;
+                margin: 0 auto 0.6rem;
+                box-shadow: 0 4px 16px rgba(46,125,50,0.4);
+            ">🌿</div>
+            <div style="font-size: 1rem; font-weight: 800; color: {THEME_COLORS['text_primary']};
+                font-family: 'Inter', sans-serif; letter-spacing: -0.02em;">Carbon</div>
+            <div style="font-size: 0.82rem; font-weight: 600; color: {THEME_COLORS['accent_primary']};
+                font-family: 'Inter', sans-serif;">Footprint</div>
+            <div style="font-size: 0.65rem; color: {THEME_COLORS['text_secondary']}; margin-top: 0.15rem;
+                font-family: 'Inter', sans-serif; opacity: 0.8;">Análise de Emissões</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -843,13 +952,28 @@ with tab1:
     saving_pct = round(safe_division(saving, r["co2_sel"], 0) * 100, 1)
 
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("🏭 Emissão atual", f"{r['co2_sel']:,.1f} kg CO₂", help=f"Fonte: {r['fonte']}")
-    k2.metric("💧 Menor emissão", f"{best_co2:,.1f} kg CO₂",
-              delta=f"-{saving_pct}% vs atual" if saving > 0 else "✅ Já é a melhor",
-              delta_color="inverse", help=f"Fonte: {best_src}")
-    k3.metric("⚡ Consumo", f"{r['consumo']:,.0f} kWh", help=f"Setor: {r['setor']}")
-    k4.metric("📅 Período", f"{get_season(r['mes'])}", help=f"{MESES_LABEL[r['mes']]} · {r['estado']}")
-    st.markdown("---")
+    _delta_menor = f"↓ {saving_pct}% vs atual" if saving > 0 else "✅ Já é a melhor"
+    with k1:
+        st.markdown(create_metric_card(
+            "Emissão Atual", f"{r['co2_sel']:,.1f} kg CO₂",
+            delta=f"Fonte: {r['fonte']}", icon="🏭", color="green"
+        ), unsafe_allow_html=True)
+    with k2:
+        st.markdown(create_metric_card(
+            "Menor Emissão", f"{best_co2:,.1f} kg CO₂",
+            delta=_delta_menor, icon="💧", color="blue"
+        ), unsafe_allow_html=True)
+    with k3:
+        st.markdown(create_metric_card(
+            "Consumo", f"{r['consumo']:,.0f} kWh",
+            delta=f"Setor: {r['setor']}", icon="⚡", color="orange"
+        ), unsafe_allow_html=True)
+    with k4:
+        st.markdown(create_metric_card(
+            "Período", get_season(r["mes"]),
+            delta=f"{MESES_LABEL[r['mes']]} · {r['estado']}", icon="📅", color="purple"
+        ), unsafe_allow_html=True)
+    st.markdown("<div style='margin: 1.25rem 0;'></div>", unsafe_allow_html=True)
 
     c1, c2 = st.columns([1.3, 1])
     with c1:
@@ -879,6 +1003,7 @@ with tab1:
                          hole=0.45, template="plotly_white")
         fig_pie.update_traces(textposition="outside", textinfo="label+percent")
         fig_pie.update_layout(showlegend=False, height=380, margin=dict(l=10,r=10,t=10,b=10))
+        fig_pie = apply_chart_style(fig_pie)
         st.plotly_chart(fig_pie, use_container_width=True)
 
     c3, c4 = st.columns(2)
@@ -896,6 +1021,7 @@ with tab1:
         fig_line.add_scatter(x=[MESES_LABEL[r["mes"]]], y=[sel_val], mode="markers",
                              marker=dict(size=12, color="red"), name="Mês selecionado")
         fig_line.update_layout(height=320, margin=dict(l=0,r=0,t=10,b=10))
+        fig_line = apply_chart_style(fig_line)
         st.plotly_chart(fig_line, use_container_width=True)
 
     with c4:
@@ -912,6 +1038,7 @@ with tab1:
         fig_pct.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
         fig_pct.add_hline(y=0, line_dash="dash", line_color="gray")
         fig_pct.update_layout(showlegend=False, height=320, margin=dict(l=0,r=0,t=10,b=10))
+        fig_pct = apply_chart_style(fig_pct)
         st.plotly_chart(fig_pct, use_container_width=True)
 
     st.markdown("---")
@@ -1027,6 +1154,7 @@ with tab2:
                          hover_data=["Detalhe"])
         fig_sim.update_traces(texttemplate="%{text:,.1f}", textposition="outside", width=0.35)
         fig_sim.update_layout(showlegend=False, height=380, margin=dict(l=0,r=0,t=10,b=10))
+        fig_sim = apply_chart_style(fig_sim)
         st.plotly_chart(fig_sim, use_container_width=True)
 
         st.markdown("#### 🕸️ Radar — emissão por fonte elétrica em cada cenário")
@@ -1044,8 +1172,12 @@ with tab2:
             theta=fontes_r + [fontes_r[0]], fill="toself", name="Cenário B",
             line_color="#FF9800", fillcolor="rgba(255,152,0,0.15)"
         ))
-        fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True)),
-                                  height=400, margin=dict(l=40,r=40,t=20,b=20))
+        fig_radar.update_layout(
+            polar=dict(radialaxis=dict(visible=True, tickfont=dict(family="Inter, sans-serif", size=10))),
+            font=dict(family="Inter, sans-serif"),
+            paper_bgcolor="rgba(0,0,0,0)",
+            height=400, margin=dict(l=40,r=40,t=20,b=20)
+        )
         st.plotly_chart(fig_radar, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1150,7 +1282,7 @@ with tab3:
                                   text_auto=".0f", aspect="auto",
                                   template="plotly_white",
                                   labels={"color": "kg CO₂"})
-            fig_heat.update_layout(height=320, margin=dict(l=0,r=0,t=10,b=10))
+            fig_heat.update_layout(height=320, margin=dict(l=0,r=0,t=10,b=10), font=dict(family="Inter, sans-serif"), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_heat, use_container_width=True)
 
             st.markdown("#### ✅ Combinações que atingem a meta")
@@ -1237,8 +1369,8 @@ with tab4:
                                    text="emissao_co2_estimada",
                                    labels={"emissao_co2_estimada":"CO₂ (kg)"})
                     fig_s.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-                    fig_s.update_layout(showlegend=False, height=300,
-                                        margin=dict(l=0,r=60,t=10,b=10))
+                    fig_s.update_layout(showlegend=False, height=300, margin=dict(l=0,r=60,t=10,b=10))
+                    fig_s = apply_chart_style(fig_s)
                     st.plotly_chart(fig_s, use_container_width=True)
 
                 with ch2:
@@ -1252,8 +1384,8 @@ with tab4:
                                    labels={"emissao_co2_estimada":"CO₂ (kg)",
                                            "fonte_energia":"Fonte"})
                     fig_f.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-                    fig_f.update_layout(showlegend=False, height=300,
-                                        margin=dict(l=0,r=60,t=10,b=10))
+                    fig_f.update_layout(showlegend=False, height=300, margin=dict(l=0,r=60,t=10,b=10))
+                    fig_f = apply_chart_style(fig_f)
                     st.plotly_chart(fig_f, use_container_width=True)
 
                 ch3, ch4 = st.columns(2)
@@ -1265,8 +1397,8 @@ with tab4:
                     fig_e = px.bar(df_est, x="estado", y="emissao_co2_estimada",
                                    template="plotly_white", color="estado",
                                    labels={"emissao_co2_estimada":"CO₂ (kg)"})
-                    fig_e.update_layout(showlegend=False, height=300,
-                                        margin=dict(l=0,r=0,t=10,b=10))
+                    fig_e.update_layout(showlegend=False, height=300, margin=dict(l=0,r=0,t=10,b=10))
+                    fig_e = apply_chart_style(fig_e)
                     st.plotly_chart(fig_e, use_container_width=True)
 
                 with ch4:
@@ -1279,6 +1411,7 @@ with tab4:
                                     color_discrete_sequence=["#2196F3"],
                                     labels={"emissao_co2_estimada":"CO₂ (kg)"})
                     fig_m.update_layout(height=300, margin=dict(l=0,r=0,t=10,b=10))
+                    fig_m = apply_chart_style(fig_m)
                     st.plotly_chart(fig_m, use_container_width=True)
 
                 st.markdown("---")
@@ -1403,24 +1536,41 @@ with tab5:
 
 st.caption("Modelo: Random Forest · R² ≈ 0.994 · Dashboard v3.0")
 
-# ── Footer Profissional ────────────────────────────────────────────────────────
-st.markdown("---")
-st.markdown("""
-<div class="footer fade-in">
-    <p style="font-size: 1rem; margin-bottom: 0.5rem; font-weight: 600; color: #2E7D32;">
-        🌿 Carbon Footprint Analysis
-    </p>
-    <p style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">
+# ── Footer Premium ────────────────────────────────────────────────────────────
+_ft_bg   = "rgba(10,31,12,0.7)"  if st.session_state.dark_mode else "rgba(232,245,233,0.7)"
+_ft_brd  = THEME_COLORS["border"]
+_ft_tc   = THEME_COLORS["text_primary"]
+_ft_sc   = THEME_COLORS["text_secondary"]
+st.markdown(f"""
+<div style="
+    background: {_ft_bg};
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid {_ft_brd};
+    border-radius: 20px;
+    padding: 2rem 2.5rem;
+    margin-top: 3rem;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    animation: fadeIn 0.6s ease;
+">
+    <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">🌿</div>
+    <div style="font-size: 1.05rem; font-weight: 700; color: {THEME_COLORS['accent_primary']}; letter-spacing: -0.02em; margin-bottom: 0.3rem;">
+        Carbon Footprint Analysis
+    </div>
+    <div style="font-size: 0.82rem; color: {_ft_sc}; margin-bottom: 1.25rem;">
         Desenvolvido com ❤️ usando <strong>Streamlit</strong> e <strong>Machine Learning</strong>
-    </p>
-    <p style="font-size: 0.85rem; color: #999;">
-        Modelo: Random Forest (R² = 0.9948) | 
-        Metodologia: CRISP-DM | 
-        Dados: EPE & ANEEL
-    </p>
-    <p style="font-size: 0.85rem; color: #999; margin-top: 1rem;">
-        🌱 Contribuindo para um futuro mais sustentável
-    </p>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+        <span class="badge badge-success">🤖 Random Forest</span>
+        <span class="badge badge-success">R² = 0.9948</span>
+        <span class="badge badge-info">🌱 CRISP-DM</span>
+        <span class="badge badge-info">📊 EPE &amp; ANEEL</span>
+        <span class="badge badge-success">⚡ &lt; 50ms</span>
+    </div>
+    <div style="font-size: 0.75rem; color: {_ft_sc}; opacity: 0.7;">
+        Contribuindo para um futuro mais sustentável · Dashboard v3.1
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
