@@ -1,0 +1,17 @@
+# Configuração de Tema - Carbon Footprint Analysis
+# Tema verde sustentável que reflete o propósito do projeto
+
+[theme]
+primaryColor = "#2E7D32"              # Verde sustentável (botões, links)
+backgroundColor = "#FAFAFA"            # Cinza muito claro (fundo principal)
+secondaryBackgroundColor = "#E8F5E9"  # Verde muito claro (sidebar, cards)
+textColor = "#1B5E20"                 # Verde escuro (texto principal)
+font = "sans serif"                   # Fonte padrão
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
