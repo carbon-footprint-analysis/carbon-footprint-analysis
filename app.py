@@ -124,6 +124,12 @@ def compute_shap(_pipeline, consumo_kwh, mes, estado, setor, fonte_energia):
     preprocessor  = _pipeline.named_steps["preprocessor"]
     regressor     = _pipeline.named_steps["regressor"]
     x_transformed = preprocessor.transform(df_in)
+    x_transformed = x_transformed.astype(float) 
+    # ------------------------------------------------------
+
+    # Agora o explainer não vai mais reclamar do tipo de dado
+    explainer = shap.TreeExplainer(model_obj.named_steps['regressor'])
+    shap_vals = explainer.shap_values(x_transformed)
     explainer     = shap.TreeExplainer(regressor)
     shap_vals     = explainer.shap_values(x_transformed)
     feature_names = get_feature_names(_pipeline)
