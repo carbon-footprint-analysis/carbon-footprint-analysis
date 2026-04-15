@@ -114,37 +114,44 @@ def get_feature_names(_pipeline):
     )
     return num_features + list(ohe_names)
 
-@st.cache_data(show_spinner="Calculando SHAP values...")
-def compute_shap(_pipeline, consumo_kwh, mes, estado, setor, fonte_energia):
-    season = get_season(mes)
-    df_in = pd.DataFrame([{
-        "consumo_kwh": consumo_kwh, "mes": mes, "estado": estado,
-        "setor": setor, "fonte_energia": fonte_energia, "season": season,
-    }])
-    preprocessor  = _pipeline.named_steps["preprocessor"]
-    regressor     = _pipeline.named_steps["regressor"]
-    x_transformed = preprocessor.transform(df_in)
-    x_transformed = x_transformed.astype(float) 
-    # ------------------------------------------------------
+@st.cache_resource
+def compute_shap(_model, _consumo, _mes, _estado, _setor, _fonte):
+    # 1. Montar o DataFrame de entrada
+    df_input = pd.DataFrame({
+        "consumo_kwh": [_consumo],
+        "mes": [_mes],
+        "estado": [_estado],
+        "setor": [_setor],
+        "fonte_energia": [_fonte],
+        "season": ["Inverno"]
+    })
 
-    # Agora o explainer não vai mais reclamar do tipo de dado
-    explainer = shap.TreeExplainer(model_obj.named_steps['regressor'])
+    # 2. Acessar componentes do Pipeline
+    preprocessor = _model.named_steps['preprocessor']
+    regressor    = _model.named_steps['regressor']
+    
+    # 3. TRANSFORMAÇÃO ROBUSTA (Resolve o ValueError)
+    x_transformed = preprocessor.transform(df_input)
+    
+    # Se o preprocessor retornar uma matriz esparsa (comum no OneHotEncoder), converte para densa
+    if hasattr(x_transformed, "toarray"):
+        x_transformed = x_transformed.toarray()
+    
+    # Agora sim, converte para float para o SHAP
+    x_transformed = x_transformed.astype(float)
+
+    # 4. Cálculo do SHAP
+    explainer = shap.TreeExplainer(regressor)
     shap_vals = explainer.shap_values(x_transformed)
-    explainer     = shap.TreeExplainer(regressor)
-    shap_vals     = explainer.shap_values(x_transformed)
-    feature_names = get_feature_names(_pipeline)
-    return shap_vals[0], explainer.expected_value, x_transformed[0], feature_names
+    
+    # Tratamento de retorno
+    expected_value = explainer.expected_value
+    if isinstance(expected_value, (list, np.ndarray)):
+        expected_value = expected_value[0]
 
-# ── Header ─────────────────────────────────────────────────────────────────────
-st.title("🌿 Dashboard · Pegada de Carbono")
-st.caption("Estimativa de emissões de CO₂ com base em consumo energético e contexto geográfico.")
-
-if model_error:
-    st.error(f"⚠️ {model_error}")
-    st.stop()
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TABS
+    feature_names = preprocessor.get_feature_names_out()
+    
+    return shap_vals[0], expected_value, x_transformed[0], feature_names# TABS
 # ══════════════════════════════════════════════════════════════════════════════
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Visão Geral",
