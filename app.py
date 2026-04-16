@@ -28,6 +28,16 @@ st.markdown("""
         font-family: 'Inter', sans-serif !important;
     }
 
+    /* ── Remover espaço em branco excessivo do topo ─────────── */
+    .block-container {
+        padding-top: 0.75rem !important;
+        padding-bottom: 1rem !important;
+    }
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+        height: 0rem !important;
+    }
+
     /* Reduzir padding geral da sidebar */
     section[data-testid="stSidebar"] > div {
         padding-top: 1rem;
